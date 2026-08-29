@@ -1,0 +1,85 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// No native enums: kept as plain strings, validated at the app layer (see
+// src/lib/constants.ts), since the project started on SQLite (no enum
+// support there) and there was no need to add native enums after moving to
+// Postgres.
+
+model PriceSetting {
+  id             String   @id @default(uuid())
+  itemKey        String   @unique // cheeseSlice | pepperoniSlice | wholeCheese | wholePepperoni | breadsticks | snack | drink
+  label          String
+  unitPriceCents Int
+  updatedAt      DateTime @updatedAt
+}
+
+model SkippedFriday {
+  id        String   @id @default(uuid())
+  date      DateTime @unique // canonical Friday instant (local midnight of that Friday, stored as UTC)
+  reason    String?
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id         String @id @default(uuid())
+  fridayDate DateTime
+
+  parentName  String
+  parentEmail String
+  parentPhone String?
+
+  totalAmountCents Int
+  paymentStatus    String // pending | paid | failed
+  paymentMode      String // mock | square
+  squarePaymentId  String?
+
+  // Snapshot of the unit prices AT CHECKOUT TIME, so historical orders
+  // stay accurate even after an admin edits PriceSetting later.
+  cheeseSlicePriceCents    Int
+  pepperoniSlicePriceCents Int
+  wholeCheesePriceCents    Int
+  wholePepperoniPriceCents Int
+  breadstickPriceCents     Int
+  snackPriceCents          Int @default(75)
+  drinkPriceCents          Int @default(100)
+
+  createdAt DateTime @default(now())
+
+  students OrderStudent[]
+
+  @@index([fridayDate])
+}
+
+model OrderStudent {
+  id      String @id @default(uuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  studentName String
+  grade       String // K, 1-12 — see GRADE_OPTIONS in src/lib/constants.ts
+
+  cheeseSlices    Int @default(0)
+  pepperoniSlices Int @default(0)
+  wholeCheese     Int @default(0)
+  wholePepperoni  Int @default(0)
+  breadsticks     Int @default(0)
+  snacks          Int @default(0)
+  drinks          Int @default(0) // secondary students (grade 6-12) only — enforced server-side
+
+  @@index([orderId])
+}
+
+model MockEmail {
+  id      String   @id @default(uuid())
+  to      String
+  subject String
+  text    String
+  sentAt  DateTime @default(now())
+}
