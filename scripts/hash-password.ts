@@ -7,6 +7,7 @@ if (!password) {
 }
 
 const hash = bcrypt.hashSync(password, 10);
-// Escaped for direct paste into .env: Next.js expands unescaped "$word" as
-// an env variable reference, which silently corrupts a raw bcrypt hash.
-console.log(hash.replace(/\$/g, "\\$"));
+const base64 = Buffer.from(hash, "utf8").toString("base64");
+
+console.log(`ADMIN_PASSWORD_HASH_BASE64="${base64}"`);
+console.log("(paste the line above into .env / your host's env vars as-is)");

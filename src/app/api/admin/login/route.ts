@@ -1,12 +1,12 @@
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { ADMIN_COOKIE_NAME, createAdminSessionToken } from "@/lib/auth";
+import { ADMIN_COOKIE_NAME, createAdminSessionToken, getAdminPasswordHash } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   const { password } = await request.json().catch(() => ({ password: undefined }));
 
-  const hash = process.env.ADMIN_PASSWORD_HASH;
+  const hash = getAdminPasswordHash();
   if (!hash) {
     return NextResponse.json({ error: "Admin login is not configured." }, { status: 500 });
   }

@@ -31,15 +31,18 @@ dev only. For a real database (e.g. right after first deploying), run
 fake orders.
 
 The seeded `.env` ships with a working dev admin password: **`pizza2026`**. To set
-your own, generate a bcrypt hash and paste it into `ADMIN_PASSWORD_HASH` in `.env`:
+your own, generate a hash and paste the printed line into `.env` (or your host's
+environment variables) as `ADMIN_PASSWORD_HASH_BASE64`:
 
 ```bash
 npx tsx scripts/hash-password.ts "yourpassword"
 ```
 
-The script prints the hash pre-escaped for `.env` — paste it as-is. (Next.js
-expands unescaped `$word` sequences in `.env` values as variable references, which
-will silently corrupt a raw bcrypt hash if you paste one in unescaped.)
+The value is base64-encoded rather than a raw bcrypt hash on purpose: bcrypt
+hashes contain `$` characters, and several env var systems — including Next.js's
+own env loader, and inconsistently Vercel's — treat `$word` inside a value as a
+reference to another variable and silently corrupt it. Base64 never contains `$`,
+so there's nothing to escape, on any host.
 
 ## Running the app
 
@@ -104,8 +107,12 @@ confirm → admin-dashboard flow is testable locally with zero external accounts
 
 1. Push this repo to GitHub, then import it into Vercel.
 2. Set the environment variables from `.env.example` in the Vercel project settings
-   (production `DATABASE_URL`, `ADMIN_PASSWORD_HASH`, a strong random
-   `ADMIN_JWT_SECRET`, `SQUARE_*`/`SMTP_*` once you have them, etc).
+   (production `DATABASE_URL`, `ADMIN_PASSWORD_HASH_BASE64`, a strong random
+   `ADMIN_JWT_SECRET`, `SQUARE_*`/`SMTP_*` once you have them, etc). Avoid ever
+   putting a raw `$`-containing value (like a bcrypt hash) directly into a Vercel
+   env var — in testing, it got corrupted inconsistently regardless of the
+   Secret/Config type. `ADMIN_PASSWORD_HASH_BASE64` sidesteps this entirely since
+   base64 never contains `$`.
 3. `npm run postinstall` (→ `prisma generate`) runs automatically on every Vercel
    build. Migrations do **not** run automatically — run
    `npm run db:migrate:deploy` (wraps `prisma migrate deploy`) against the

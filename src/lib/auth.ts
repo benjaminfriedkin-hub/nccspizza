@@ -27,3 +27,19 @@ export async function verifyAdminSessionToken(token: string): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Bcrypt hashes contain literal "$" characters, which several env var
+ * systems (including, inconsistently, Next.js's own dotenv-expand env
+ * loader) treat as the start of a "$VAR" reference to interpolate — silently
+ * corrupting the hash. Storing it base64-encoded sidesteps the whole problem
+ * since base64 never contains "$". ADMIN_PASSWORD_HASH (raw) is still
+ * supported as a fallback for hosts where this isn't a concern.
+ */
+export function getAdminPasswordHash(): string | undefined {
+  const b64 = process.env.ADMIN_PASSWORD_HASH_BASE64;
+  if (b64) {
+    return Buffer.from(b64, "base64").toString("utf8");
+  }
+  return process.env.ADMIN_PASSWORD_HASH;
+}
