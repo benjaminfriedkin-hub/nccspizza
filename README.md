@@ -5,6 +5,18 @@ place and pay for a per-student order (slices, whole pizzas, breadsticks); the
 school gets a real-time dashboard of exactly how many whole pizzas (by type) and
 breadstick orders to buy, plus a delivery list by classroom.
 
+## Current status
+
+- **Live at:** https://ncc-pizza.vercel.app
+- **Database:** production Neon Postgres, seeded with default prices only (no
+  fake demo data)
+- **Email:** real, via Gmail SMTP (an app password on a personal Gmail account —
+  see "Payments and email" below for why, and how to move to a real domain later)
+- **Payments:** still mock mode — no Square account exists yet, so no real
+  charges happen. This is the main thing blocking a real launch; see below.
+- Admin password is saved outside this repo (in a password manager) — not
+  written down here on purpose.
+
 ## Stack
 
 - **Next.js (App Router, TypeScript)** — single full-stack app, deployed on Vercel
@@ -15,6 +27,16 @@ breadstick orders to buy, plus a delivery list by classroom.
 - **Nodemailer** for confirmation emails, with a built-in mock path (persisted to
   an admin-visible Mock Inbox) when no SMTP credentials are configured
 - **Tailwind CSS**, **Vitest** for unit tests
+
+## Local development: keep this folder off iCloud Drive
+
+This project lives at `~/Developer/ncc-pizza`, not under `~/Desktop` or
+`~/Documents`, on purpose. Those folders sync to iCloud Drive by default on
+macOS, and iCloud trying to sync the ~40,000+ files in `node_modules`
+(especially the Square SDK, which alone has thousands of small type-definition
+files) fought file access with `next build`'s TypeScript check badly enough to
+turn a normal ~5-second build into 15+ minutes. If you ever move this project,
+keep it somewhere outside iCloud-synced folders.
 
 ## One-time setup
 
@@ -89,19 +111,40 @@ correctness matters most.
 
 ## Payments and email: mock mode vs. real
 
-Neither a Square account nor an email provider exists yet. Both integrations work
-in a clearly-labeled **mock mode** out of the box, so the full order → pay →
-confirm → admin-dashboard flow is testable locally with zero external accounts:
+Both integrations support a clearly-labeled **mock mode** out of the box, so the
+full order → pay → confirm → admin-dashboard flow is testable locally with zero
+external accounts:
 
-- **No `SQUARE_ACCESS_TOKEN`/`SQUARE_LOCATION_ID` in `.env`** → orders are recorded
+- **No `SQUARE_ACCESS_TOKEN`/`SQUARE_LOCATION_ID` set** → orders are recorded
   as paid via a mock path (`paymentMode: "mock"` in the database and admin
   dashboard), no real charge happens, and the parent-facing button reads "Place
-  order (test mode)". Once a Square account exists, set the `SQUARE_*` and
-  `NEXT_PUBLIC_SQUARE_*` vars (sandbox first, then production) in `.env` — real
-  charges start automatically, no code changes needed.
-- **No `SMTP_HOST`/`SMTP_USER`/`SMTP_PASS` in `.env`** → confirmation emails are
-  logged to the console and saved to **Admin → Mock Inbox** instead of sent. Set
-  the `SMTP_*` vars once a real mailbox/SMTP provider exists.
+  order (test mode)". **This is the current state in production** — no Square
+  account exists yet. Once one does, set the `SQUARE_*` and
+  `NEXT_PUBLIC_SQUARE_*` vars (sandbox first, then production) — real charges
+  start automatically, no code changes needed.
+- **No `SMTP_HOST`/`SMTP_USER`/`SMTP_PASS` set** → confirmation emails are
+  logged to the console and saved to **Admin → Mock Inbox** instead of sent.
+
+  **Production currently uses real SMTP** via a personal Gmail account (an
+  [App Password](https://myaccount.google.com/apppasswords), not the account
+  password — requires 2-Step Verification enabled first):
+  ```
+  SMTP_HOST=smtp.gmail.com
+  SMTP_PORT=587
+  SMTP_USER=<the gmail address>
+  SMTP_PASS=<16-character app password, no spaces>
+  SMTP_FROM="NCCS Pizza Fridays <the gmail address>"
+  ```
+  This was the fallback because no one had DNS access to a domain to verify with
+  a transactional email provider (Resend, etc.) yet. Two reasons to move off it
+  eventually: Gmail SMTP has a ~500 emails/day sending cap (fine for now, a
+  school's weekly volume is nowhere close), and parents see a personal Gmail
+  address as the sender rather than something official-looking. To switch to a
+  real provider later: verify any domain you control in Resend (or similar) —
+  it does **not** need to be where the site is hosted, and does **not** need a
+  real mailbox behind it, just DNS records proving control — then swap the
+  `SMTP_*` vars to that provider's values and update `SMTP_FROM` to an address
+  on the verified domain. No code changes either way.
 
 ## Deploying (Vercel)
 
