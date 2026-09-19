@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/Card";
-import { ITEM_LABELS, studentTotalCents, type PriceMap, type StudentForm } from "./shared";
+import { studentTotalCents, type LabelMap, type PriceMap, type StudentForm } from "./shared";
 
 function formatCents(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`;
@@ -15,7 +15,15 @@ const LINE_ITEM_KEYS = [
   ["drinks", "drink"],
 ] as const;
 
-export function OrderSummary({ students, prices }: { students: StudentForm[]; prices: PriceMap }) {
+export function OrderSummary({
+  students,
+  prices,
+  labels,
+}: {
+  students: StudentForm[];
+  prices: PriceMap;
+  labels: LabelMap;
+}) {
   const total = students.reduce((t, s) => t + studentTotalCents(s, prices), 0);
   const hasAnyItems = students.some((s) => studentTotalCents(s, prices) > 0);
 
@@ -41,7 +49,7 @@ export function OrderSummary({ students, prices }: { students: StudentForm[]; pr
                     return (
                       <li key={qtyKey} className="flex justify-between">
                         <span>
-                          {qty} × {ITEM_LABELS[priceKey]}
+                          {qty} × {labels[priceKey]}
                         </span>
                         <span className="tabular-nums">{formatCents(qty * prices[priceKey])}</span>
                       </li>

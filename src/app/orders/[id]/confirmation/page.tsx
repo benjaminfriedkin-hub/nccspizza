@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { ITEM_LABELS, gradeLabel } from "@/lib/constants";
+import { gradeLabel } from "@/lib/constants";
+import { getCurrentPriceSettings } from "@/lib/pricing";
 import { Card } from "@/components/ui/Card";
 
 function formatCents(cents: number): string {
@@ -30,6 +31,8 @@ export default async function ConfirmationPage({
   });
 
   if (!order) notFound();
+
+  const { label: labels } = await getCurrentPriceSettings();
 
   const fridayLabel = order.fridayDate.toLocaleDateString("en-US", {
     weekday: "long",
@@ -64,7 +67,7 @@ export default async function ConfirmationPage({
                     if (!qty) return null;
                     return (
                       <li key={qtyKey}>
-                        {qty} × {ITEM_LABELS[label]}
+                        {qty} × {labels[label]}
                       </li>
                     );
                   })}

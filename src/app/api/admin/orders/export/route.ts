@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { buildOrdersCsv, selectAndSortForGroup, EXPORT_GROUPS, type ExportGroupKey } from "@/lib/csv";
+import { getCurrentPriceSettings } from "@/lib/pricing";
 
 const GROUP_KEYS = EXPORT_GROUPS.map((g) => g.key);
 
@@ -51,8 +52,9 @@ export async function GET(request: NextRequest) {
     }))
   );
 
+  const { label: labels } = await getCurrentPriceSettings();
   const grouped = selectAndSortForGroup(rows, groupParam);
-  const csv = buildOrdersCsv(grouped);
+  const csv = buildOrdersCsv(grouped, labels);
   const dateLabel = fridayDate.toISOString().slice(0, 10);
 
   return new NextResponse(csv, {

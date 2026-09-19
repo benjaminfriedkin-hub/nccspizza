@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUpcomingFriday } from "@/lib/friday";
-import { getCurrentPrices, computeOrderTotalCents, type StudentQuantities } from "@/lib/pricing";
+import { getCurrentPriceSettings, computeOrderTotalCents, type StudentQuantities } from "@/lib/pricing";
 import { chargeOrder } from "@/lib/square";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 import { ITEM_KEYS, GRADE_VALUES, isSecondaryGrade } from "@/lib/constants";
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const prices = await getCurrentPrices();
+  const { price: prices, label: labels } = await getCurrentPriceSettings();
   const totalAmountCents = computeOrderTotalCents(body.students, prices);
   const orderId = randomUUID();
 
@@ -157,6 +157,7 @@ export async function POST(request: NextRequest) {
       day: "numeric",
     }),
     totalAmountCents: order.totalAmountCents,
+    labels,
     students: order.students.map((s) => ({
       firstName: s.firstName,
       lastName: s.lastName,

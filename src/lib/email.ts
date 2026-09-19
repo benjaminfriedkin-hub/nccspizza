@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import { prisma } from "./prisma";
-import { ITEM_LABELS, gradeLabel, type ItemKey } from "./constants";
+import { gradeLabel, type ItemKey } from "./constants";
+import type { LabelMap } from "./pricing";
 
 const hasRealSmtp = Boolean(
   process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS
@@ -33,6 +34,7 @@ interface OrderConfirmationEmailInput {
   parentEmail: string;
   fridayDateLabel: string;
   totalAmountCents: number;
+  labels: LabelMap;
   students: {
     firstName: string;
     lastName: string;
@@ -54,7 +56,7 @@ function buildEmailBody(input: OrderConfirmationEmailInput): { subject: string; 
     lines.push(`${student.firstName} ${student.lastName} (${gradeLabel(student.grade)}):`);
     for (const [key, qty] of Object.entries(student.quantities)) {
       if (qty && qty > 0) {
-        lines.push(`  - ${qty} x ${ITEM_LABELS[key as ItemKey]}`);
+        lines.push(`  - ${qty} x ${input.labels[key as ItemKey]}`);
       }
     }
   }

@@ -5,13 +5,13 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { NumberStepper } from "@/components/ui/NumberStepper";
 import { GRADE_OPTIONS, isSecondaryGrade } from "@/lib/constants";
-import { ITEM_LABELS, type PriceMap } from "./shared";
-import type { StudentForm } from "./shared";
+import type { LabelMap, PriceMap, StudentForm } from "./shared";
 
 interface StudentCardProps {
   index: number;
   student: StudentForm;
   prices: PriceMap;
+  labels: LabelMap;
   canRemove: boolean;
   onChange: (student: StudentForm) => void;
   onRemove: () => void;
@@ -21,7 +21,7 @@ function formatPrice(cents: number): string {
   return `$${(cents / 100).toFixed(2)} each`;
 }
 
-export function StudentCard({ index, student, prices, canRemove, onChange, onRemove }: StudentCardProps) {
+export function StudentCard({ index, student, prices, labels, canRemove, onChange, onRemove }: StudentCardProps) {
   function set<K extends keyof StudentForm>(key: K, value: StudentForm[K]) {
     onChange({ ...student, [key]: value });
   }
@@ -86,44 +86,44 @@ export function StudentCard({ index, student, prices, canRemove, onChange, onRem
 
       <div className="mt-3 divide-y divide-stone-100">
         <NumberStepper
-          label={ITEM_LABELS.cheeseSlice}
+          label={labels.cheeseSlice}
           priceLabel={formatPrice(prices.cheeseSlice)}
           value={student.cheeseSlices}
           onChange={(v) => set("cheeseSlices", v)}
         />
         <NumberStepper
-          label={ITEM_LABELS.pepperoniSlice}
+          label={labels.pepperoniSlice}
           priceLabel={formatPrice(prices.pepperoniSlice)}
           value={student.pepperoniSlices}
           onChange={(v) => set("pepperoniSlices", v)}
         />
         <NumberStepper
-          label={ITEM_LABELS.wholeCheese}
+          label={labels.wholeCheese}
           priceLabel={formatPrice(prices.wholeCheese)}
           value={student.wholeCheese}
           onChange={(v) => set("wholeCheese", v)}
         />
         <NumberStepper
-          label={ITEM_LABELS.wholePepperoni}
+          label={labels.wholePepperoni}
           priceLabel={formatPrice(prices.wholePepperoni)}
           value={student.wholePepperoni}
           onChange={(v) => set("wholePepperoni", v)}
         />
         <NumberStepper
-          label={ITEM_LABELS.breadsticks}
+          label={labels.breadsticks}
           priceLabel={formatPrice(prices.breadsticks)}
           value={student.breadsticks}
           onChange={(v) => set("breadsticks", v)}
         />
         <NumberStepper
-          label={ITEM_LABELS.snack}
+          label={labels.snack}
           priceLabel={formatPrice(prices.snack)}
           value={student.snacks}
           onChange={(v) => set("snacks", v)}
         />
         {secondary && (
           <NumberStepper
-            label={ITEM_LABELS.drink}
+            label={labels.drink}
             priceLabel={formatPrice(prices.drink)}
             value={student.drinks}
             onChange={(v) => set("drinks", v)}

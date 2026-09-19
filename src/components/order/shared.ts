@@ -1,7 +1,7 @@
-import { ITEM_LABELS, type ItemKey } from "@/lib/constants";
+import type { ItemKey } from "@/lib/constants";
 
-export { ITEM_LABELS };
 export type PriceMap = Record<ItemKey, number>;
+export type LabelMap = Record<ItemKey, string>;
 
 export interface StudentForm {
   key: string;

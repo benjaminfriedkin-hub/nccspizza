@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { getCurrentPrices } from "@/lib/pricing";
-import { ITEM_LABELS } from "@/lib/constants";
+import { getCurrentPriceSettings } from "@/lib/pricing";
+import { ITEM_KEYS } from "@/lib/constants";
 
 export async function GET() {
-  const prices = await getCurrentPrices();
-  const items = Object.entries(prices).map(([itemKey, unitPriceCents]) => ({
+  const settings = await getCurrentPriceSettings();
+  const items = ITEM_KEYS.map((itemKey) => ({
     itemKey,
-    label: ITEM_LABELS[itemKey as keyof typeof ITEM_LABELS],
-    unitPriceCents,
+    label: settings.label[itemKey],
+    unitPriceCents: settings.price[itemKey],
   }));
   return NextResponse.json({ items });
 }

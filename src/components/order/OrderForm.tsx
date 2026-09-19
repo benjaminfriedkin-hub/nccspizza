@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { StudentCard } from "./StudentCard";
 import { OrderSummary } from "./OrderSummary";
-import { emptyStudent, studentTotalCents, type PriceMap, type StudentForm } from "./shared";
+import { emptyStudent, studentTotalCents, type LabelMap, type PriceMap, type StudentForm } from "./shared";
 
 const SQUARE_CONFIGURED = Boolean(process.env.NEXT_PUBLIC_SQUARE_APPLICATION_ID);
 
@@ -15,7 +15,15 @@ function newKey() {
   return Math.random().toString(36).slice(2);
 }
 
-export function OrderForm({ prices, fridayLabel }: { prices: PriceMap; fridayLabel: string }) {
+export function OrderForm({
+  prices,
+  labels,
+  fridayLabel,
+}: {
+  prices: PriceMap;
+  labels: LabelMap;
+  fridayLabel: string;
+}) {
   const router = useRouter();
   const [students, setStudents] = useState<StudentForm[]>([emptyStudent(newKey())]);
   const [parentName, setParentName] = useState("");
@@ -107,6 +115,7 @@ export function OrderForm({ prices, fridayLabel }: { prices: PriceMap; fridayLab
               index={i}
               student={s}
               prices={prices}
+              labels={labels}
               canRemove={students.length > 1}
               onChange={(updated) => updateStudent(i, updated)}
               onRemove={() => removeStudent(i)}
@@ -115,7 +124,7 @@ export function OrderForm({ prices, fridayLabel }: { prices: PriceMap; fridayLab
         </div>
       </div>
 
-      <OrderSummary students={students} prices={prices} />
+      <OrderSummary students={students} prices={prices} labels={labels} />
 
       <Card className="p-4 sm:p-5">
         <h2 className="mb-3 text-base font-semibold text-stone-800">Your info</h2>

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getUpcomingFriday, getNextOrderableFriday, getReopensAt } from "@/lib/friday";
-import { getCurrentPrices } from "@/lib/pricing";
+import { getCurrentPriceSettings } from "@/lib/pricing";
 import { SCHOOL_TIMEZONE } from "@/lib/constants";
 import { OrderForm } from "@/components/order/OrderForm";
 import { Card } from "@/components/ui/Card";
@@ -29,6 +29,7 @@ export default async function Home() {
   const skippedRows = await prisma.skippedFriday.findMany();
   const skippedDates = skippedRows.map((r) => r.date);
   const window = getUpcomingFriday(new Date(), skippedDates);
+  const priceSettings = await getCurrentPriceSettings();
 
   return (
     <div className="flex flex-1 justify-center px-4 py-8 sm:py-12">
@@ -48,7 +49,11 @@ export default async function Home() {
                 Ordering closes Wednesday 11:59 PM
               </p>
             </Card>
-            <OrderForm prices={await getCurrentPrices()} fridayLabel={formatFriday(window.friday)} />
+            <OrderForm
+              prices={priceSettings.price}
+              labels={priceSettings.label}
+              fridayLabel={formatFriday(window.friday)}
+            />
           </>
         ) : (
           <ClosedState friday={window.friday} isSkipped={window.isSkipped} skippedDates={skippedDates} />

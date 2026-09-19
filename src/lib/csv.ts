@@ -1,5 +1,4 @@
 import {
-  ITEM_LABELS,
   gradeLabel,
   gradeRank,
   GRADE_BAND_K_TO_2,
@@ -7,6 +6,7 @@ import {
   GRADE_BAND_6_TO_12,
   GRADE_BAND_TEACHERS_PARENTS,
 } from "./constants";
+import type { LabelMap } from "./pricing";
 
 export interface CsvOrderStudent {
   firstName: string;
@@ -66,7 +66,7 @@ export function selectAndSortForGroup(rows: CsvOrderStudent[], group: ExportGrou
     });
 }
 
-export function buildOrdersCsv(rows: CsvOrderStudent[]): string {
+export function buildOrdersCsv(rows: CsvOrderStudent[], labels: LabelMap): string {
   const header = [
     "First Name",
     "Last Name",
@@ -74,13 +74,13 @@ export function buildOrdersCsv(rows: CsvOrderStudent[]): string {
     "Parent Name",
     "Parent Email",
     "Parent Phone",
-    ITEM_LABELS.cheeseSlice,
-    ITEM_LABELS.pepperoniSlice,
-    ITEM_LABELS.wholeCheese,
-    ITEM_LABELS.wholePepperoni,
-    ITEM_LABELS.breadsticks,
-    ITEM_LABELS.snack,
-    ITEM_LABELS.drink,
+    labels.cheeseSlice,
+    labels.pepperoniSlice,
+    labels.wholeCheese,
+    labels.wholePepperoni,
+    labels.breadsticks,
+    labels.snack,
+    labels.drink,
   ];
 
   const lines = [header.map(csvEscape).join(",")];
