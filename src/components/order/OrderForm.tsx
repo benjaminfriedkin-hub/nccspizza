@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { StudentCard } from "./StudentCard";
 import { OrderSummary } from "./OrderSummary";
+import { SquareCardField, type SquareCardFieldHandle } from "./SquareCardField";
 import { emptyStudent, studentTotalCents, type LabelMap, type PriceMap, type StudentForm } from "./shared";
 
 const SQUARE_CONFIGURED = Boolean(process.env.NEXT_PUBLIC_SQUARE_APPLICATION_ID);
@@ -31,6 +32,8 @@ export function OrderForm({
   const [parentPhone, setParentPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cardReady, setCardReady] = useState(false);
+  const cardFieldRef = useRef<SquareCardFieldHandle>(null);
 
   const total = students.reduce((t, s) => t + studentTotalCents(s, prices), 0);
 
@@ -64,6 +67,18 @@ export function OrderForm({
     }
 
     setSubmitting(true);
+
+    let sourceId: string | undefined;
+    if (SQUARE_CONFIGURED) {
+      const result = await cardFieldRef.current?.tokenize();
+      if (!result?.token) {
+        setError(result?.error || "Could not process card. Please check your card details.");
+        setSubmitting(false);
+        return;
+      }
+      sourceId = result.token;
+    }
+
     try {
       const res = await fetch("/api/orders", {
         method: "POST",
@@ -72,6 +87,7 @@ export function OrderForm({
           parentName,
           parentEmail,
           parentPhone: parentPhone || undefined,
+          sourceId,
           students: students.map((s) => ({
             firstName: s.firstName,
             lastName: s.lastName,
@@ -149,6 +165,13 @@ export function OrderForm({
         </div>
       </Card>
 
+      {SQUARE_CONFIGURED && (
+        <Card className="p-4 sm:p-5">
+          <h2 className="mb-3 text-base font-semibold text-stone-800">Payment</h2>
+          <SquareCardField ref={cardFieldRef} onReadyChange={setCardReady} />
+        </Card>
+      )}
+
       {!SQUARE_CONFIGURED && (
         <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
           Test mode: card payment isn&apos;t connected yet, so orders are placed without a real
@@ -158,7 +181,11 @@ export function OrderForm({
 
       {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
 
-      <Button type="submit" disabled={submitting} className="w-full text-base">
+      <Button
+        type="submit"
+        disabled={submitting || (SQUARE_CONFIGURED && !cardReady)}
+        className="w-full text-base"
+      >
         {submitting
           ? "Placing order…"
           : SQUARE_CONFIGURED
