@@ -1,0 +1,8 @@
+# Vercel CLI deploys upload the .env file and load it during the build,
+# overriding the environment variables configured in the Vercel dashboard —
+# this happened once already (bakes local dev secrets into production).
+# Never let local env files reach a deploy.
+.env
+.env.local
+.env.development
+.env.production

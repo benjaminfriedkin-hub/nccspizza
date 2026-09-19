@@ -52,6 +52,7 @@ export function StudentCard({ index, student, prices, labels, canRemove, onChang
             value={student.firstName}
             onChange={(e) => set("firstName", e.target.value)}
             placeholder="e.g. Ava"
+            autoComplete="off"
             required
           />
         </div>
@@ -61,6 +62,7 @@ export function StudentCard({ index, student, prices, labels, canRemove, onChang
             value={student.lastName}
             onChange={(e) => set("lastName", e.target.value)}
             placeholder="e.g. Johnson"
+            autoComplete="off"
             required
           />
         </div>

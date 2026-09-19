@@ -33,17 +33,30 @@ export interface SquareCardFieldHandle {
   tokenize(): Promise<{ token?: string; error?: string }>;
 }
 
+const MAX_INIT_ATTEMPTS = 3;
+const RETRY_DELAY_MS = 1000;
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export const SquareCardField = forwardRef<SquareCardFieldHandle, { onReadyChange?: (ready: boolean) => void }>(
   function SquareCardField({ onReadyChange }, ref) {
     const cardRef = useRef<SquareCard | null>(null);
     const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    async function initCard() {
+    async function initCard(attempt = 1) {
       try {
+        setStatus("loading");
         if (!window.Square || !SQUARE_APPLICATION_ID || !SQUARE_LOCATION_ID) {
           throw new Error("Card payment is not configured.");
         }
+        // A slow or flaky connection (common on mobile) can make Square's SDK
+        // fail its own internal init handshake — that's transient, not fatal,
+        // so retry a couple of times before showing an error.
+        const container = document.getElementById("square-card-container");
+        if (container) container.innerHTML = "";
         const payments = window.Square.payments(SQUARE_APPLICATION_ID, SQUARE_LOCATION_ID);
         const card = await payments.card();
         await card.attach("#square-card-container");
@@ -51,8 +64,14 @@ export const SquareCardField = forwardRef<SquareCardFieldHandle, { onReadyChange
         setStatus("ready");
         onReadyChange?.(true);
       } catch (err) {
+        if (attempt < MAX_INIT_ATTEMPTS) {
+          await sleep(RETRY_DELAY_MS * attempt);
+          return initCard(attempt + 1);
+        }
         setStatus("error");
-        setErrorMessage(err instanceof Error ? err.message : "Could not load the card form.");
+        setErrorMessage(
+          "Could not load the card form — this usually means a slow or spotty connection. Please check your connection and tap Try again."
+        );
         onReadyChange?.(false);
       }
     }
@@ -73,11 +92,22 @@ export const SquareCardField = forwardRef<SquareCardFieldHandle, { onReadyChange
 
     return (
       <div>
-        <Script src={SQUARE_SDK_SRC} strategy="afterInteractive" onLoad={initCard} />
+        <Script src={SQUARE_SDK_SRC} strategy="afterInteractive" onLoad={() => initCard()} />
         <label className="mb-1 block text-xs font-medium text-stone-600">Card</label>
         <div id="square-card-container" className="rounded-lg border border-stone-300 p-3 min-h-[42px]" />
         {status === "loading" && <p className="mt-1 text-xs text-stone-400">Loading card form…</p>}
-        {status === "error" && errorMessage && <p className="mt-1 text-xs text-red-600">{errorMessage}</p>}
+        {status === "error" && errorMessage && (
+          <div className="mt-1">
+            <p className="text-xs text-red-600">{errorMessage}</p>
+            <button
+              type="button"
+              onClick={() => initCard()}
+              className="mt-1 text-xs font-medium text-amber-700 underline"
+            >
+              Try again
+            </button>
+          </div>
+        )}
       </div>
     );
   }

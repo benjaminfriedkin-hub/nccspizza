@@ -147,7 +147,12 @@ export function OrderForm({
         <div className="space-y-3">
           <div>
             <label className="mb-1 block text-xs font-medium text-stone-600">Parent name</label>
-            <Input value={parentName} onChange={(e) => setParentName(e.target.value)} required />
+            <Input
+              value={parentName}
+              onChange={(e) => setParentName(e.target.value)}
+              autoComplete="name"
+              required
+            />
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-stone-600">Email</label>
@@ -155,12 +160,18 @@ export function OrderForm({
               type="email"
               value={parentEmail}
               onChange={(e) => setParentEmail(e.target.value)}
+              autoComplete="email"
               required
             />
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-stone-600">Phone (optional)</label>
-            <Input type="tel" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} />
+            <Input
+              type="tel"
+              value={parentPhone}
+              onChange={(e) => setParentPhone(e.target.value)}
+              autoComplete="tel"
+            />
           </div>
         </div>
       </Card>
