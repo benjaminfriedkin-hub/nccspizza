@@ -32,7 +32,7 @@ export function OrderSummary({ students, prices }: { students: StudentForm[]; pr
             return (
               <div key={s.key} className="border-b border-stone-100 pb-3 last:border-0 last:pb-0">
                 <p className="text-sm font-medium text-stone-800">
-                  {s.studentName.trim() || `Student ${i + 1}`}
+                  {`${s.firstName} ${s.lastName}`.trim() || `Student ${i + 1}`}
                 </p>
                 <ul className="mt-1 space-y-0.5 text-xs text-stone-600">
                   {LINE_ITEM_KEYS.map(([qtyKey, priceKey]) => {

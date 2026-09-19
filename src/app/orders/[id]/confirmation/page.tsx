@@ -56,7 +56,7 @@ export default async function ConfirmationPage({
             {order.students.map((s) => (
               <div key={s.id}>
                 <p className="text-sm font-medium text-stone-800">
-                  {s.studentName} — {gradeLabel(s.grade)}
+                  {s.firstName} {s.lastName} — {gradeLabel(s.grade)}
                 </p>
                 <ul className="mt-1 space-y-0.5 text-xs text-stone-600">
                   {LINE_ITEMS.map(([qtyKey, label]) => {

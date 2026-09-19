@@ -3,13 +3,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { listFridaysAround } from "@/lib/friday";
 import { computePizzaNeeds } from "@/lib/pizzaMath";
-import { gradeLabel } from "@/lib/constants";
+import { gradeLabel, WEEKLY_BUFFER } from "@/lib/constants";
+import { EXPORT_GROUPS } from "@/lib/csv";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
 interface OrderStudent {
   id: string;
-  studentName: string;
+  firstName: string;
+  lastName: string;
   grade: string;
   cheeseSlices: number;
   pepperoniSlices: number;
@@ -60,7 +62,7 @@ export default function DashboardPage() {
   }, [selectedFriday]);
 
   const allStudents = orders.flatMap((o) => o.students);
-  const needs = computePizzaNeeds(allStudents);
+  const needs = computePizzaNeeds(allStudents, WEEKLY_BUFFER);
   const totalRevenueCents = orders.reduce((t, o) => t + o.totalAmountCents, 0);
 
   return (
@@ -79,15 +81,22 @@ export default function DashboardPage() {
               </option>
             ))}
           </select>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-medium text-stone-500">Export CSV:</span>
+        {EXPORT_GROUPS.map((group) => (
           <a
-            href={`/api/admin/orders/export?friday=${encodeURIComponent(selectedFriday.toISOString())}`}
+            key={group.key}
+            href={`/api/admin/orders/export?friday=${encodeURIComponent(selectedFriday.toISOString())}&group=${group.key}`}
             className="inline-flex"
           >
-            <Button variant="secondary" type="button">
-              Export CSV
+            <Button variant="secondary" type="button" className="!px-3 !py-1.5 text-xs">
+              {group.label}
             </Button>
           </a>
-        </div>
+        ))}
       </div>
 
       {loading ? (
@@ -102,6 +111,7 @@ export default function DashboardPage() {
                 {needs.cheese.totalSlices} slices ordered → ⌈{needs.cheese.totalSlices}/8⌉ ={" "}
                 {needs.cheese.pizzasFromSlices} pizza{needs.cheese.pizzasFromSlices === 1 ? "" : "s"}
                 {needs.cheese.wholeOrdered > 0 && <> + {needs.cheese.wholeOrdered} whole ordered</>}
+                {needs.cheese.buffer > 0 && <> + {needs.cheese.buffer} standing buffer</>}
               </p>
             </Card>
             <Card className="p-4">
@@ -111,11 +121,16 @@ export default function DashboardPage() {
                 {needs.pepperoni.totalSlices} slices ordered → ⌈{needs.pepperoni.totalSlices}/8⌉ ={" "}
                 {needs.pepperoni.pizzasFromSlices} pizza{needs.pepperoni.pizzasFromSlices === 1 ? "" : "s"}
                 {needs.pepperoni.wholeOrdered > 0 && <> + {needs.pepperoni.wholeOrdered} whole ordered</>}
+                {needs.pepperoni.buffer > 0 && <> + {needs.pepperoni.buffer} standing buffer</>}
               </p>
             </Card>
             <Card className="p-4">
               <h2 className="text-sm font-semibold text-stone-700">🥖 Breadstick orders needed</h2>
               <p className="mt-1 text-3xl font-bold text-amber-700">{needs.breadstickOrders}</p>
+              <p className="mt-1 text-xs text-stone-500">
+                {needs.breadstickOrdersFromStudents} ordered
+                {needs.breadstickBuffer > 0 && <> + {needs.breadstickBuffer} standing buffer</>}
+              </p>
               <p className="mt-1 text-xs text-stone-500">
                 {orders.length} order{orders.length === 1 ? "" : "s"} · {formatCents(totalRevenueCents)}{" "}
                 collected
@@ -128,7 +143,7 @@ export default function DashboardPage() {
             <Card className="p-4">
               <h2 className="text-sm font-semibold text-stone-700">🥤 Drinks needed</h2>
               <p className="mt-1 text-3xl font-bold text-amber-700">{needs.drinkOrders}</p>
-              <p className="mt-1 text-xs text-stone-500">Secondary students (grades 6–12) only</p>
+              <p className="mt-1 text-xs text-stone-500">Secondary students (6–12), teachers, and parents only</p>
             </Card>
           </div>
 
@@ -153,7 +168,9 @@ export default function DashboardPage() {
                   {orders.map((order) =>
                     order.students.map((s, i) => (
                       <tr key={s.id} className="border-b border-stone-100 align-top">
-                        <td className="py-2 pr-4 font-medium text-stone-800">{s.studentName}</td>
+                        <td className="py-2 pr-4 font-medium text-stone-800">
+                          {s.firstName} {s.lastName}
+                        </td>
                         <td className="py-2 pr-4 text-stone-600">{gradeLabel(s.grade)}</td>
                         <td className="py-2 pr-4 text-stone-600">
                           {[

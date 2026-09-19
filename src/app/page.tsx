@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { getUpcomingFriday, getNextOrderableFriday } from "@/lib/friday";
+import { getUpcomingFriday, getNextOrderableFriday, getReopensAt } from "@/lib/friday";
 import { getCurrentPrices } from "@/lib/pricing";
+import { SCHOOL_TIMEZONE } from "@/lib/constants";
 import { OrderForm } from "@/components/order/OrderForm";
 import { Card } from "@/components/ui/Card";
 
@@ -11,6 +12,17 @@ export const dynamic = "force-dynamic";
 
 function formatFriday(date: Date): string {
   return date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+}
+
+function formatReopensAt(date: Date): string {
+  return date.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: SCHOOL_TIMEZONE,
+  });
 }
 
 export default async function Home() {
@@ -56,6 +68,7 @@ async function ClosedState({
   skippedDates: Date[];
 }) {
   const next = getNextOrderableFriday(new Date(), skippedDates);
+  const reopensAt = getReopensAt(friday);
 
   return (
     <Card className="p-6 text-center">
@@ -67,11 +80,15 @@ async function ClosedState({
           ? "Enjoy the break! Check back for the next order window."
           : "The Wednesday 11:59 PM cutoff has passed for this Friday."}
       </p>
-      {next && (
-        <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          Next order window opens for <span className="font-semibold">{formatFriday(next.friday)}</span>
-        </p>
-      )}
+      <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+        Ordering reopens <span className="font-semibold">{formatReopensAt(reopensAt)}</span>
+        {next && (
+          <>
+            {" "}
+            for <span className="font-semibold">{formatFriday(next.friday)}</span>
+          </>
+        )}
+      </p>
     </Card>
   );
 }

@@ -5,7 +5,8 @@ export type PriceMap = Record<ItemKey, number>;
 
 export interface StudentForm {
   key: string;
-  studentName: string;
+  firstName: string;
+  lastName: string;
   grade: string;
   cheeseSlices: number;
   pepperoniSlices: number;
@@ -19,7 +20,8 @@ export interface StudentForm {
 export function emptyStudent(key: string): StudentForm {
   return {
     key,
-    studentName: "",
+    firstName: "",
+    lastName: "",
     grade: "",
     cheeseSlices: 0,
     pepperoniSlices: 0,

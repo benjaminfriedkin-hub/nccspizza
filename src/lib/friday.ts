@@ -89,6 +89,16 @@ export function getCutoffFor(friday: Date, timeZone: string = SCHOOL_TIMEZONE): 
 }
 
 /**
+ * 12:00:00 AM the Saturday right after `friday` — the instant ordering
+ * reopens for the following week (a new window is open from here until
+ * that following Friday's own Wednesday cutoff).
+ */
+export function getReopensAt(friday: Date, timeZone: string = SCHOOL_TIMEZONE): Date {
+  const p = zonedParts(friday, timeZone);
+  return zonedInstant(timeZone, p.year, p.month, p.day + 1);
+}
+
+/**
  * Window info for the nearest calendar Friday on/after `now`, evaluated for
  * that specific date — does not silently roll forward to a later Friday
  * even if that date is skipped or already past its own cutoff.

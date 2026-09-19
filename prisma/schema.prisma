@@ -62,8 +62,9 @@ model OrderStudent {
   orderId String
   order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  studentName String
-  grade       String // K, 1-12 — see GRADE_OPTIONS in src/lib/constants.ts
+  firstName String
+  lastName  String
+  grade     String // K, 1-12, Teacher, Parent — see GRADE_OPTIONS in src/lib/constants.ts
 
   cheeseSlices    Int @default(0)
   pepperoniSlices Int @default(0)

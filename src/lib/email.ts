@@ -34,7 +34,8 @@ interface OrderConfirmationEmailInput {
   fridayDateLabel: string;
   totalAmountCents: number;
   students: {
-    studentName: string;
+    firstName: string;
+    lastName: string;
     grade: string;
     quantities: Partial<Record<ItemKey, number>>;
   }[];
@@ -50,7 +51,7 @@ function buildEmailBody(input: OrderConfirmationEmailInput): { subject: string; 
   lines.push(`Pizza Friday: ${input.fridayDateLabel}`);
   lines.push("");
   for (const student of input.students) {
-    lines.push(`${student.studentName} (${gradeLabel(student.grade)}):`);
+    lines.push(`${student.firstName} ${student.lastName} (${gradeLabel(student.grade)}):`);
     for (const [key, qty] of Object.entries(student.quantities)) {
       if (qty && qty > 0) {
         lines.push(`  - ${qty} x ${ITEM_LABELS[key as ItemKey]}`);

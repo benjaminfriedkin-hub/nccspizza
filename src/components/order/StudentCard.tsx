@@ -47,15 +47,24 @@ export function StudentCard({ index, student, prices, canRemove, onChange, onRem
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-xs font-medium text-stone-600">Student name</label>
+          <label className="mb-1 block text-xs font-medium text-stone-600">First name</label>
           <Input
-            value={student.studentName}
-            onChange={(e) => set("studentName", e.target.value)}
-            placeholder="e.g. Ava Johnson"
+            value={student.firstName}
+            onChange={(e) => set("firstName", e.target.value)}
+            placeholder="e.g. Ava"
             required
           />
         </div>
         <div>
+          <label className="mb-1 block text-xs font-medium text-stone-600">Last name</label>
+          <Input
+            value={student.lastName}
+            onChange={(e) => set("lastName", e.target.value)}
+            placeholder="e.g. Johnson"
+            required
+          />
+        </div>
+        <div className="sm:col-span-2">
           <label className="mb-1 block text-xs font-medium text-stone-600">Grade</label>
           <select
             className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
@@ -115,14 +124,16 @@ export function StudentCard({ index, student, prices, canRemove, onChange, onRem
         {secondary && (
           <NumberStepper
             label={ITEM_LABELS.drink}
-            priceLabel={`${formatPrice(prices.drink)} · secondary students only`}
+            priceLabel={formatPrice(prices.drink)}
             value={student.drinks}
             onChange={(v) => set("drinks", v)}
           />
         )}
       </div>
       {!secondary && student.grade && (
-        <p className="mt-2 text-xs text-stone-400">Drinks are available for secondary students (grades 6–12).</p>
+        <p className="mt-2 text-xs text-stone-400">
+          Drinks are available for secondary students (grades 6–12), teachers, and parents.
+        </p>
       )}
     </Card>
   );

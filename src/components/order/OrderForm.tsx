@@ -65,7 +65,8 @@ export function OrderForm({ prices, fridayLabel }: { prices: PriceMap; fridayLab
           parentEmail,
           parentPhone: parentPhone || undefined,
           students: students.map((s) => ({
-            studentName: s.studentName,
+            firstName: s.firstName,
+            lastName: s.lastName,
             grade: s.grade,
             cheeseSlices: s.cheeseSlices,
             pepperoniSlices: s.pepperoniSlices,

@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { buildOrdersCsv } from "@/lib/csv";
+import { buildOrdersCsv, selectAndSortForGroup, EXPORT_GROUPS, type ExportGroupKey } from "@/lib/csv";
+
+const GROUP_KEYS = EXPORT_GROUPS.map((g) => g.key);
+
+function isExportGroupKey(value: string | null): value is ExportGroupKey {
+  return value !== null && (GROUP_KEYS as string[]).includes(value);
+}
 
 export async function GET(request: NextRequest) {
   const fridayParam = request.nextUrl.searchParams.get("friday");
@@ -13,6 +19,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Invalid friday date." }, { status: 400 });
   }
 
+  const groupParam = request.nextUrl.searchParams.get("group");
+  if (!isExportGroupKey(groupParam)) {
+    return NextResponse.json(
+      { error: `Missing or invalid group query param. Expected one of: ${GROUP_KEYS.join(", ")}.` },
+      { status: 400 }
+    );
+  }
+
   const orders = await prisma.order.findMany({
     where: { fridayDate },
     include: { students: true },
@@ -21,7 +35,8 @@ export async function GET(request: NextRequest) {
 
   const rows = orders.flatMap((order) =>
     order.students.map((s) => ({
-      studentName: s.studentName,
+      firstName: s.firstName,
+      lastName: s.lastName,
       grade: s.grade,
       cheeseSlices: s.cheeseSlices,
       pepperoniSlices: s.pepperoniSlices,
@@ -36,14 +51,15 @@ export async function GET(request: NextRequest) {
     }))
   );
 
-  const csv = buildOrdersCsv(rows);
+  const grouped = selectAndSortForGroup(rows, groupParam);
+  const csv = buildOrdersCsv(grouped);
   const dateLabel = fridayDate.toISOString().slice(0, 10);
 
   return new NextResponse(csv, {
     status: 200,
     headers: {
       "Content-Type": "text/csv",
-      "Content-Disposition": `attachment; filename="pizza-orders-${dateLabel}.csv"`,
+      "Content-Disposition": `attachment; filename="pizza-orders-${dateLabel}-${groupParam}.csv"`,
     },
   });
 }

@@ -36,8 +36,8 @@ export const SLICES_PER_PIZZA = 8;
 
 export const SCHOOL_TIMEZONE = process.env.SCHOOL_TIMEZONE || "America/New_York";
 
-// Grade K-12, in order. Value is what's stored on the order; label is what's
-// shown in the dropdown.
+// Grade K-12 plus non-student roles, in order. Value is what's stored on the
+// order; label is what's shown in the dropdown.
 export const GRADE_OPTIONS: { value: string; label: string }[] = [
   { value: "K", label: "Kindergarten" },
   { value: "1", label: "1st Grade" },
@@ -52,12 +52,22 @@ export const GRADE_OPTIONS: { value: string; label: string }[] = [
   { value: "10", label: "10th Grade" },
   { value: "11", label: "11th Grade" },
   { value: "12", label: "12th Grade" },
+  { value: "Teacher", label: "Teacher" },
+  { value: "Parent", label: "Parent" },
 ];
 
 export const GRADE_VALUES = GRADE_OPTIONS.map((g) => g.value);
 
-// Secondary = grades 6-12. Drives which students the drink option is offered to.
+// Grade bands used to split the admin CSV export into four files.
+export const GRADE_BAND_K_TO_2 = ["K", "1", "2"];
+export const GRADE_BAND_3_TO_5 = ["3", "4", "5"];
+export const GRADE_BAND_6_TO_12 = ["6", "7", "8", "9", "10", "11", "12"];
+export const GRADE_BAND_TEACHERS_PARENTS = ["Teacher", "Parent"];
+
+// Secondary = grades 6-12, plus teachers/parents ordering for themselves.
+// Drives which students the drink option is offered to.
 export function isSecondaryGrade(grade: string): boolean {
+  if (grade === "Teacher" || grade === "Parent") return true;
   const n = Number(grade);
   return Number.isInteger(n) && n >= 6 && n <= 12;
 }
@@ -65,3 +75,18 @@ export function isSecondaryGrade(grade: string): boolean {
 export function gradeLabel(grade: string): string {
   return GRADE_OPTIONS.find((g) => g.value === grade)?.label ?? grade;
 }
+
+/** Sort rank for a grade value, in the same order as GRADE_OPTIONS. */
+export function gradeRank(grade: string): number {
+  const i = GRADE_VALUES.indexOf(grade);
+  return i === -1 ? GRADE_VALUES.length : i;
+}
+
+// Standing weekly buffer: bought every week regardless of what's ordered
+// online (e.g. staff/walk-up margin), added into the admin dashboard's
+// "needed" counts but never tied to any specific order or parent.
+export const WEEKLY_BUFFER = {
+  cheesePizzas: 1,
+  pepperoniPizzas: 1,
+  breadsticks: 2,
+} as const;

@@ -5,7 +5,7 @@ import { computeOrderTotalCents, type StudentQuantities } from "../src/lib/prici
 
 const prisma = new PrismaClient();
 
-function student(overrides: Partial<StudentQuantities> & { studentName: string; grade: string }) {
+function student(overrides: Partial<StudentQuantities> & { firstName: string; lastName: string; grade: string }) {
   return {
     cheeseSlices: 0,
     pepperoniSlices: 0,
@@ -53,8 +53,8 @@ async function main() {
     };
 
     const order1Students = [
-      student({ studentName: "Ava Johnson", grade: "2", cheeseSlices: 2, breadsticks: 1 }),
-      student({ studentName: "Noah Johnson", grade: "4", pepperoniSlices: 2, breadsticks: 1, snacks: 1 }),
+      student({ firstName: "Ava", lastName: "Johnson", grade: "2", cheeseSlices: 2, breadsticks: 1 }),
+      student({ firstName: "Noah", lastName: "Johnson", grade: "4", pepperoniSlices: 2, breadsticks: 1, snacks: 1 }),
     ];
     await prisma.order.create({
       data: {
@@ -70,7 +70,7 @@ async function main() {
       },
     });
 
-    const order2Students = [student({ studentName: "Liam Rodriguez", grade: "K", wholeCheese: 1 })];
+    const order2Students = [student({ firstName: "Liam", lastName: "Rodriguez", grade: "K", wholeCheese: 1 })];
     await prisma.order.create({
       data: {
         fridayDate: upcoming.friday,
@@ -87,7 +87,7 @@ async function main() {
 
     // A secondary-grade (6-12) student, to exercise the drink option.
     const order3Students = [
-      student({ studentName: "Ethan Chen", grade: "8", wholePepperoni: 1, snacks: 1, drinks: 2 }),
+      student({ firstName: "Ethan", lastName: "Chen", grade: "8", wholePepperoni: 1, snacks: 1, drinks: 2 }),
     ];
     await prisma.order.create({
       data: {

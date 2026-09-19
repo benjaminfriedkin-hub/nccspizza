@@ -9,7 +9,8 @@ import { sendOrderConfirmationEmail } from "@/lib/email";
 import { ITEM_KEYS, GRADE_VALUES, isSecondaryGrade } from "@/lib/constants";
 
 interface StudentInput extends StudentQuantities {
-  studentName: string;
+  firstName: string;
+  lastName: string;
   grade: string;
 }
 
@@ -30,9 +31,13 @@ function isNonNegativeInt(value: unknown): value is number {
 }
 
 function validateStudent(s: Partial<StudentInput>): string | null {
-  if (!s.studentName || typeof s.studentName !== "string" || !s.studentName.trim()) {
-    return "Each student needs a name.";
+  if (!s.firstName || typeof s.firstName !== "string" || !s.firstName.trim()) {
+    return "Each student needs a first name.";
   }
+  if (!s.lastName || typeof s.lastName !== "string" || !s.lastName.trim()) {
+    return "Each student needs a last name.";
+  }
+  const fullName = `${s.firstName} ${s.lastName}`;
   if (!s.grade || typeof s.grade !== "string" || !GRADE_VALUES.includes(s.grade)) {
     return "Each student needs a valid grade.";
   }
@@ -49,10 +54,10 @@ function validateStudent(s: Partial<StudentInput>): string | null {
     return "Item quantities must be whole numbers, 0 or greater.";
   }
   if (quantities.every((q) => (q as number) === 0)) {
-    return `${s.studentName} has no items selected.`;
+    return `${fullName} has no items selected.`;
   }
   if ((s.drinks as number) > 0 && !isSecondaryGrade(s.grade)) {
-    return `${s.studentName}: drinks are only available for secondary students (grades 6-12).`;
+    return `${fullName}: drinks are only available for secondary students (grades 6-12), teachers, and parents.`;
   }
   return null;
 }
@@ -125,7 +130,8 @@ export async function POST(request: NextRequest) {
         drinkPriceCents: prices.drink,
         students: {
           create: body.students!.map((s) => ({
-            studentName: s.studentName.trim(),
+            firstName: s.firstName.trim(),
+            lastName: s.lastName.trim(),
             grade: s.grade,
             cheeseSlices: s.cheeseSlices,
             pepperoniSlices: s.pepperoniSlices,
@@ -152,7 +158,8 @@ export async function POST(request: NextRequest) {
     }),
     totalAmountCents: order.totalAmountCents,
     students: order.students.map((s) => ({
-      studentName: s.studentName,
+      firstName: s.firstName,
+      lastName: s.lastName,
       grade: s.grade,
       quantities: Object.fromEntries(
         ITEM_KEYS.map((key) => {
