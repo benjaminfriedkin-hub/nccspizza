@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -34,6 +34,8 @@ export function OrderForm({
   const [error, setError] = useState<string | null>(null);
   const [cardReady, setCardReady] = useState(false);
   const cardFieldRef = useRef<SquareCardFieldHandle>(null);
+  const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const scrollToKeyRef = useRef<string | null>(null);
 
   const total = students.reduce((t, s) => t + studentTotalCents(s, prices), 0);
 
@@ -46,8 +48,19 @@ export function OrderForm({
   }
 
   function addStudent() {
-    setStudents((prev) => [...prev, emptyStudent(newKey())]);
+    const key = newKey();
+    scrollToKeyRef.current = key;
+    setStudents((prev) => [...prev, emptyStudent(key)]);
   }
+
+  // After a new student/person card is added, scroll it into view — on
+  // mobile especially, it lands below the fold and is easy to miss otherwise.
+  useEffect(() => {
+    const key = scrollToKeyRef.current;
+    if (!key) return;
+    scrollToKeyRef.current = null;
+    cardRefs.current.get(key)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [students]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -121,21 +134,28 @@ export function OrderForm({
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-base font-semibold text-stone-800">Students</h2>
           <Button variant="secondary" type="button" onClick={addStudent}>
-            + Add another student
+            + Add another student/person
           </Button>
         </div>
         <div className="space-y-4">
           {students.map((s, i) => (
-            <StudentCard
+            <div
               key={s.key}
-              index={i}
-              student={s}
-              prices={prices}
-              labels={labels}
-              canRemove={students.length > 1}
-              onChange={(updated) => updateStudent(i, updated)}
-              onRemove={() => removeStudent(i)}
-            />
+              ref={(el) => {
+                if (el) cardRefs.current.set(s.key, el);
+                else cardRefs.current.delete(s.key);
+              }}
+            >
+              <StudentCard
+                index={i}
+                student={s}
+                prices={prices}
+                labels={labels}
+                canRemove={students.length > 1}
+                onChange={(updated) => updateStudent(i, updated)}
+                onRemove={() => removeStudent(i)}
+              />
+            </div>
           ))}
         </div>
       </div>

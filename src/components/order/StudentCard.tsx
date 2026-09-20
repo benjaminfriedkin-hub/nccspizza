@@ -21,6 +21,12 @@ function formatPrice(cents: number): string {
   return `$${(cents / 100).toFixed(2)} each`;
 }
 
+function cardTitle(grade: string, index: number): string {
+  if (grade === "Teacher") return "Teacher";
+  if (grade === "Parent") return "Parent";
+  return `Student ${index + 1}`;
+}
+
 export function StudentCard({ index, student, prices, labels, canRemove, onChange, onRemove }: StudentCardProps) {
   function set<K extends keyof StudentForm>(key: K, value: StudentForm[K]) {
     onChange({ ...student, [key]: value });
@@ -37,7 +43,7 @@ export function StudentCard({ index, student, prices, labels, canRemove, onChang
   return (
     <Card className="p-4 sm:p-5">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-stone-700">Student {index + 1}</h3>
+        <h3 className="text-sm font-semibold text-stone-700">{cardTitle(student.grade, index)}</h3>
         {canRemove && (
           <Button variant="ghost" type="button" onClick={onRemove} className="!px-2 !py-1 text-xs">
             Remove
