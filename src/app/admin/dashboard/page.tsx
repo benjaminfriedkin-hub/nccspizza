@@ -125,11 +125,17 @@ export default function DashboardPage() {
               </p>
             </Card>
             <Card className="p-4">
-              <h2 className="text-sm font-semibold text-stone-700">🥖 Breadstick orders needed</h2>
-              <p className="mt-1 text-3xl font-bold text-amber-700">{needs.breadstickOrders}</p>
+              <h2 className="text-sm font-semibold text-stone-700">🥖 Cottage Inn breadstick orders needed</h2>
+              <p className="mt-1 text-3xl font-bold text-amber-700">
+                {needs.breadsticks.totalPurchaseOrdersNeeded}
+              </p>
               <p className="mt-1 text-xs text-stone-500">
-                {needs.breadstickOrdersFromStudents} ordered
-                {needs.breadstickBuffer > 0 && <> + {needs.breadstickBuffer} standing buffer</>}
+                {needs.breadsticks.totalStudentOrders} parent order
+                {needs.breadsticks.totalStudentOrders === 1 ? "" : "s"} (3 pieces each) → ⌈
+                {needs.breadsticks.totalStudentOrders}/4⌉ = {needs.breadsticks.purchaseOrdersFromStudentOrders}{" "}
+                Cottage Inn order{needs.breadsticks.purchaseOrdersFromStudentOrders === 1 ? "" : "s"} (12 pieces
+                each)
+                {needs.breadsticks.buffer > 0 && <> + {needs.breadsticks.buffer} standing buffer</>}
               </p>
               <p className="mt-1 text-xs text-stone-500">
                 {orders.length} order{orders.length === 1 ? "" : "s"} · {formatCents(totalRevenueCents)}{" "}

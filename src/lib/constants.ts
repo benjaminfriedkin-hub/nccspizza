@@ -34,6 +34,10 @@ export const DEFAULT_PRICE_CENTS: Record<ItemKey, number> = {
 
 export const SLICES_PER_PIZZA = 8;
 
+// A parent-facing "Garlic cheese breadsticks" order is 3 pieces; Cottage Inn
+// sells breadsticks in trays of 12 pieces. So 4 parent orders = 1 tray to buy.
+export const BREADSTICK_STUDENT_ORDERS_PER_PURCHASE_ORDER = 4;
+
 export const SCHOOL_TIMEZONE = process.env.SCHOOL_TIMEZONE || "America/New_York";
 
 // Grade K-12 plus non-student roles, in order. Value is what's stored on the

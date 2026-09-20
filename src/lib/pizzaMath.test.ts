@@ -33,7 +33,14 @@ describe("computePizzaNeeds", () => {
   it("sums breadstick orders across students", () => {
     const students = [student({ breadsticks: 1 }), student({ breadsticks: 2 })];
     const needs = computePizzaNeeds(students);
-    expect(needs.breadstickOrders).toBe(3);
+    expect(needs.breadsticks.totalStudentOrders).toBe(3);
+  });
+
+  it("converts breadstick orders to Cottage Inn purchase orders (4 parent orders = 1 tray), rounding up", () => {
+    const students = [student({ breadsticks: 5 })];
+    const needs = computePizzaNeeds(students);
+    expect(needs.breadsticks.purchaseOrdersFromStudentOrders).toBe(2);
+    expect(needs.breadsticks.totalPurchaseOrdersNeeded).toBe(2);
   });
 
   it("sums snack and drink orders across students", () => {
@@ -47,7 +54,7 @@ describe("computePizzaNeeds", () => {
     const needs = computePizzaNeeds([]);
     expect(needs.cheese.totalPizzasNeeded).toBe(0);
     expect(needs.pepperoni.totalPizzasNeeded).toBe(0);
-    expect(needs.breadstickOrders).toBe(0);
+    expect(needs.breadsticks.totalPurchaseOrdersNeeded).toBe(0);
     expect(needs.snackOrders).toBe(0);
     expect(needs.drinkOrders).toBe(0);
   });
