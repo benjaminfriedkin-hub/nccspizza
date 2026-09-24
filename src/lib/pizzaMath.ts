@@ -1,4 +1,8 @@
-import { SLICES_PER_PIZZA, BREADSTICK_STUDENT_ORDERS_PER_PURCHASE_ORDER } from "./constants";
+import {
+  SLICES_PER_PIZZA,
+  BREADSTICK_PIECES_PER_PARENT_ORDER,
+  BREADSTICK_PIECES_PER_PURCHASE_ORDER,
+} from "./constants";
 
 export interface StudentOrderQuantities {
   cheeseSlices: number;
@@ -20,6 +24,7 @@ export interface PizzaTypeNeeds {
 
 export interface BreadstickNeeds {
   totalStudentOrders: number;
+  totalPieces: number;
   purchaseOrdersFromStudentOrders: number;
   buffer: number;
   totalPurchaseOrdersNeeded: number;
@@ -57,11 +62,11 @@ function typeNeeds(totalSlices: number, wholeOrdered: number, buffer: number): P
 }
 
 function breadstickNeeds(totalStudentOrders: number, buffer: number): BreadstickNeeds {
-  const purchaseOrdersFromStudentOrders = Math.ceil(
-    totalStudentOrders / BREADSTICK_STUDENT_ORDERS_PER_PURCHASE_ORDER
-  );
+  const totalPieces = totalStudentOrders * BREADSTICK_PIECES_PER_PARENT_ORDER;
+  const purchaseOrdersFromStudentOrders = Math.ceil(totalPieces / BREADSTICK_PIECES_PER_PURCHASE_ORDER);
   return {
     totalStudentOrders,
+    totalPieces,
     purchaseOrdersFromStudentOrders,
     buffer,
     totalPurchaseOrdersNeeded: purchaseOrdersFromStudentOrders + buffer,

@@ -36,11 +36,12 @@ describe("computePizzaNeeds", () => {
     expect(needs.breadsticks.totalStudentOrders).toBe(3);
   });
 
-  it("converts breadstick orders to Cottage Inn purchase orders (4 parent orders = 1 tray), rounding up", () => {
-    const students = [student({ breadsticks: 5 })];
-    const needs = computePizzaNeeds(students);
-    expect(needs.breadsticks.purchaseOrdersFromStudentOrders).toBe(2);
-    expect(needs.breadsticks.totalPurchaseOrdersNeeded).toBe(2);
+  it("converts 3-piece parent breadstick orders to 10-piece Pizza Hut orders, rounding up", () => {
+    const cases: [number, number][] = [[1, 1], [3, 1], [4, 2], [7, 3], [10, 3]];
+    for (const [parentOrders, expected] of cases) {
+      const needs = computePizzaNeeds([student({ breadsticks: parentOrders })]);
+      expect(needs.breadsticks.purchaseOrdersFromStudentOrders).toBe(expected);
+    }
   });
 
   it("sums snack and drink orders across students", () => {

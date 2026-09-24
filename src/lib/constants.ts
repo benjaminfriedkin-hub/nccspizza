@@ -34,9 +34,10 @@ export const DEFAULT_PRICE_CENTS: Record<ItemKey, number> = {
 
 export const SLICES_PER_PIZZA = 8;
 
-// A parent-facing "Garlic cheese breadsticks" order is 3 pieces; Cottage Inn
-// sells breadsticks in trays of 12 pieces. So 4 parent orders = 1 tray to buy.
-export const BREADSTICK_STUDENT_ORDERS_PER_PURCHASE_ORDER = 4;
+// A parent-facing "Garlic cheese breadsticks" order is 3 pieces; Pizza Hut
+// sells breadsticks in orders of 10 pieces. Purchase orders = ceil(pieces / 10).
+export const BREADSTICK_PIECES_PER_PARENT_ORDER = 3;
+export const BREADSTICK_PIECES_PER_PURCHASE_ORDER = 10;
 
 export const SCHOOL_TIMEZONE = process.env.SCHOOL_TIMEZONE || "America/New_York";
 
@@ -92,5 +93,5 @@ export function gradeRank(grade: string): number {
 export const WEEKLY_BUFFER = {
   cheesePizzas: 1,
   pepperoniPizzas: 1,
-  breadsticks: 2,
+  breadsticks: 1,
 } as const;
