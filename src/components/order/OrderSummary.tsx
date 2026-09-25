@@ -19,10 +19,12 @@ export function OrderSummary({
   students,
   prices,
   labels,
+  splitNotes = [],
 }: {
   students: StudentForm[];
   prices: PriceMap;
   labels: LabelMap;
+  splitNotes?: string[];
 }) {
   const total = students.reduce((t, s) => t + studentTotalCents(s, prices), 0);
   const hasAnyItems = students.some((s) => studentTotalCents(s, prices) > 0);
@@ -59,6 +61,11 @@ export function OrderSummary({
               </div>
             );
           })}
+          {splitNotes.map((note) => (
+            <p key={note} className="text-xs text-stone-500">
+              🍕 {note}
+            </p>
+          ))}
         </div>
       )}
       <div className="mt-4 flex items-center justify-between border-t border-stone-200 pt-3">

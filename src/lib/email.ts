@@ -40,6 +40,7 @@ interface OrderConfirmationEmailInput {
     lastName: string;
     grade: string;
     quantities: Partial<Record<ItemKey, number>>;
+    sharedLines?: string[];
   }[];
 }
 
@@ -59,6 +60,7 @@ function buildEmailBody(input: OrderConfirmationEmailInput): { subject: string; 
         lines.push(`  - ${qty} x ${input.labels[key as ItemKey]}`);
       }
     }
+    for (const line of student.sharedLines ?? []) lines.push(`  - ${line}`);
   }
   lines.push("");
   lines.push(`Total charged: ${formatCents(input.totalAmountCents)}`);

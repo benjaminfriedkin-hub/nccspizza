@@ -6,12 +6,17 @@ import { getUpcomingFriday } from "@/lib/friday";
 import { getCurrentPriceSettings, computeOrderTotalCents, type StudentQuantities } from "@/lib/pricing";
 import { chargeOrder } from "@/lib/square";
 import { sendOrderConfirmationEmail } from "@/lib/email";
-import { ITEM_KEYS, GRADE_VALUES, isSecondaryGrade } from "@/lib/constants";
+import { ITEM_KEYS, GRADE_VALUES, isSecondaryGrade, SLICES_PER_PIZZA } from "@/lib/constants";
+import { validateWholeAllocation, sharedSliceLines } from "@/lib/wholePizza";
 
 interface StudentInput extends StudentQuantities {
   firstName: string;
   lastName: string;
   grade: string;
+  // Slices of the order's whole pizzas this person eats. Optional: when
+  // omitted, each buyer keeps all of their own whole pizzas.
+  cheeseSlicesFromWhole?: number;
+  pepperoniSlicesFromWhole?: number;
 }
 
 interface OrderRequestBody {
@@ -53,7 +58,8 @@ function validateStudent(s: Partial<StudentInput>): string | null {
   if (!quantities.every(isNonNegativeInt)) {
     return "Item quantities must be whole numbers, 0 or greater.";
   }
-  if (quantities.every((q) => (q as number) === 0)) {
+  const sharedSlices = [s.cheeseSlicesFromWhole ?? 0, s.pepperoniSlicesFromWhole ?? 0];
+  if (quantities.every((q) => (q as number) === 0) && sharedSlices.every((q) => q === 0)) {
     return `${fullName} has no items selected.`;
   }
   if ((s.drinks as number) > 0 && !isSecondaryGrade(s.grade)) {
@@ -79,6 +85,18 @@ export async function POST(request: NextRequest) {
     const error = validateStudent(s);
     if (error) return badRequest(error);
   }
+
+  const anySplit = body.students.some(
+    (s) => s.cheeseSlicesFromWhole !== undefined || s.pepperoniSlicesFromWhole !== undefined
+  );
+  const people = body.students.map((s) => ({
+    wholeCheese: s.wholeCheese,
+    wholePepperoni: s.wholePepperoni,
+    cheeseSlicesFromWhole: anySplit ? s.cheeseSlicesFromWhole ?? 0 : s.wholeCheese * SLICES_PER_PIZZA,
+    pepperoniSlicesFromWhole: anySplit ? s.pepperoniSlicesFromWhole ?? 0 : s.wholePepperoni * SLICES_PER_PIZZA,
+  }));
+  const splitError = validateWholeAllocation(people);
+  if (splitError) return badRequest(splitError);
 
   const skippedRows = await prisma.skippedFriday.findMany();
   const skippedDates = skippedRows.map((r) => r.date);
@@ -129,7 +147,9 @@ export async function POST(request: NextRequest) {
         snackPriceCents: prices.snack,
         drinkPriceCents: prices.drink,
         students: {
-          create: body.students!.map((s) => ({
+          create: body.students!.map((s, i) => ({
+            cheeseSlicesFromWhole: people[i].cheeseSlicesFromWhole,
+            pepperoniSlicesFromWhole: people[i].pepperoniSlicesFromWhole,
             firstName: s.firstName.trim(),
             lastName: s.lastName.trim(),
             grade: s.grade,
@@ -162,6 +182,7 @@ export async function POST(request: NextRequest) {
       firstName: s.firstName,
       lastName: s.lastName,
       grade: s.grade,
+      sharedLines: sharedSliceLines(s, { cheese: labels.wholeCheese, pepperoni: labels.wholePepperoni }),
       quantities: Object.fromEntries(
         ITEM_KEYS.map((key) => {
           const map: Record<string, number> = {

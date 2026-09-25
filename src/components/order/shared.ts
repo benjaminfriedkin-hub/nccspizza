@@ -44,3 +44,11 @@ export function studentTotalCents(s: StudentForm, prices: PriceMap): number {
     s.drinks * prices.drink
   );
 }
+
+/** Display name for a person on the order, falling back to their card title before a name is typed. */
+export function personName(s: StudentForm, index: number): string {
+  const typed = `${s.firstName} ${s.lastName}`.trim();
+  if (typed) return typed;
+  if (s.grade === "Teacher" || s.grade === "Parent") return s.grade;
+  return `Student ${index + 1}`;
+}

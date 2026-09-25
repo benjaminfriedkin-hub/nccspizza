@@ -16,6 +16,9 @@ export interface CsvOrderStudent {
   pepperoniSlices: number;
   wholeCheese: number;
   wholePepperoni: number;
+  cheeseSlicesFromWhole: number;
+  pepperoniSlicesFromWhole: number;
+  shareNote: string;
   breadsticks: number;
   snacks: number;
   drinks: number;
@@ -81,6 +84,9 @@ export function buildOrdersCsv(rows: CsvOrderStudent[], labels: LabelMap): strin
     labels.breadsticks,
     labels.snack,
     labels.drink,
+    "Whole cheese pizza slices for this person",
+    "Whole pepperoni pizza slices for this person",
+    "Shared whole pizza split",
   ];
 
   const lines = [header.map(csvEscape).join(",")];
@@ -101,6 +107,9 @@ export function buildOrdersCsv(rows: CsvOrderStudent[], labels: LabelMap): strin
         String(row.breadsticks),
         String(row.snacks),
         String(row.drinks),
+        String(row.cheeseSlicesFromWhole),
+        String(row.pepperoniSlicesFromWhole),
+        row.shareNote,
       ]
         .map(csvEscape)
         .join(",")

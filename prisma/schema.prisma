@@ -70,6 +70,11 @@ model OrderStudent {
   pepperoniSlices Int @default(0)
   wholeCheese     Int @default(0)
   wholePepperoni  Int @default(0)
+  // Slices this person gets from the order's whole pizzas (bought under
+  // wholeCheese/wholePepperoni, possibly by a sibling). Summed across the
+  // order these always equal 8 x the whole pizzas bought.
+  cheeseSlicesFromWhole    Int @default(0)
+  pepperoniSlicesFromWhole Int @default(0)
   breadsticks     Int @default(0)
   snacks          Int @default(0)
   drinks          Int @default(0) // secondary students (grade 6-12) only — enforced server-side

@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { buildOrdersCsv, selectAndSortForGroup, EXPORT_GROUPS, type ExportGroupKey } from "@/lib/csv";
 import { getCurrentPriceSettings } from "@/lib/pricing";
+import { shareNotes } from "@/lib/wholePizza";
 
 const GROUP_KEYS = EXPORT_GROUPS.map((g) => g.key);
 
@@ -34,8 +35,12 @@ export async function GET(request: NextRequest) {
     orderBy: { createdAt: "asc" },
   });
 
-  const rows = orders.flatMap((order) =>
-    order.students.map((s) => ({
+  const rows = orders.flatMap((order) => {
+    const notes = shareNotes(order.students.map((s) => ({ ...s, name: `${s.firstName} ${s.lastName}` })));
+    return order.students.map((s, i) => ({
+      shareNote: notes[i],
+      cheeseSlicesFromWhole: s.cheeseSlicesFromWhole,
+      pepperoniSlicesFromWhole: s.pepperoniSlicesFromWhole,
       firstName: s.firstName,
       lastName: s.lastName,
       grade: s.grade,
@@ -49,8 +54,8 @@ export async function GET(request: NextRequest) {
       parentName: order.parentName,
       parentEmail: order.parentEmail,
       parentPhone: order.parentPhone,
-    }))
-  );
+    }));
+  });
 
   const { label: labels } = await getCurrentPriceSettings();
   const grouped = selectAndSortForGroup(rows, groupParam);

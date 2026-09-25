@@ -5,6 +5,7 @@ import { listFridaysAround } from "@/lib/friday";
 import { computePizzaNeeds } from "@/lib/pizzaMath";
 import { gradeLabel, WEEKLY_BUFFER } from "@/lib/constants";
 import { EXPORT_GROUPS } from "@/lib/csv";
+import { sharedSliceLines } from "@/lib/wholePizza";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
@@ -17,6 +18,8 @@ interface OrderStudent {
   pepperoniSlices: number;
   wholeCheese: number;
   wholePepperoni: number;
+  cheeseSlicesFromWhole: number;
+  pepperoniSlicesFromWhole: number;
   breadsticks: number;
   snacks: number;
   drinks: number;
@@ -186,6 +189,7 @@ export default function DashboardPage() {
                             s.breadsticks > 0 && `${s.breadsticks} breadsticks`,
                             s.snacks > 0 && `${s.snacks} snack`,
                             s.drinks > 0 && `${s.drinks} drink`,
+                            ...sharedSliceLines(s, { cheese: "whole cheese", pepperoni: "whole pepperoni" }),
                           ]
                             .filter(Boolean)
                             .join(", ")}

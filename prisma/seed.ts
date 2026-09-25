@@ -6,7 +6,7 @@ import { computeOrderTotalCents, type StudentQuantities } from "../src/lib/prici
 const prisma = new PrismaClient();
 
 function student(overrides: Partial<StudentQuantities> & { firstName: string; lastName: string; grade: string }) {
-  return {
+  return withWholeSlices({
     cheeseSlices: 0,
     pepperoniSlices: 0,
     wholeCheese: 0,
@@ -15,7 +15,11 @@ function student(overrides: Partial<StudentQuantities> & { firstName: string; la
     snacks: 0,
     drinks: 0,
     ...overrides,
-  };
+  });
+}
+
+function withWholeSlices<T extends { wholeCheese: number; wholePepperoni: number }>(s: T) {
+  return { ...s, cheeseSlicesFromWhole: s.wholeCheese * 8, pepperoniSlicesFromWhole: s.wholePepperoni * 8 };
 }
 
 async function main() {

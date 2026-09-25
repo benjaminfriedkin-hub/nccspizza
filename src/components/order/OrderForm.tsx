@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/Button";
 import { StudentCard } from "./StudentCard";
 import { OrderSummary } from "./OrderSummary";
 import { SquareCardField, type SquareCardFieldHandle } from "./SquareCardField";
-import { emptyStudent, studentTotalCents, type LabelMap, type PriceMap, type StudentForm } from "./shared";
+import { WholePizzaSplit } from "./WholePizzaSplit";
+import { emptyStudent, personName, studentTotalCents, type LabelMap, type PriceMap, type StudentForm } from "./shared";
+import { resolveSlices, shareNotes, validateWholeAllocation, type CustomAllocation } from "@/lib/wholePizza";
 
 const SQUARE_CONFIGURED = Boolean(process.env.NEXT_PUBLIC_SQUARE_APPLICATION_ID);
 
@@ -37,7 +39,28 @@ export function OrderForm({
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const scrollToKeyRef = useRef<string | null>(null);
 
+  const [customCheese, setCustomCheese] = useState<CustomAllocation | null>(null);
+  const [customPepperoni, setCustomPepperoni] = useState<CustomAllocation | null>(null);
+
   const total = students.reduce((t, s) => t + studentTotalCents(s, prices), 0);
+
+  const cheeseWhole = students.reduce((t, s) => t + s.wholeCheese, 0);
+  const pepperoniWhole = students.reduce((t, s) => t + s.wholePepperoni, 0);
+  const cheeseSlices = resolveSlices(students.map((s) => ({ key: s.key, whole: s.wholeCheese })), customCheese);
+  const pepperoniSlices = resolveSlices(
+    students.map((s) => ({ key: s.key, whole: s.wholePepperoni })),
+    customPepperoni
+  );
+  const withSlices = students.map((s, i) => ({
+    ...s,
+    cheeseSlicesFromWhole: cheeseSlices[s.key],
+    pepperoniSlicesFromWhole: pepperoniSlices[s.key],
+    name: personName(s, i),
+  }));
+  const splitNotes = Array.from(
+    new Set(shareNotes(withSlices).flatMap((n) => (n ? n.split("; ") : [])))
+  );
+  const namedPeople = students.map((s, i) => ({ key: s.key, name: personName(s, i) }));
 
   function updateStudent(index: number, updated: StudentForm) {
     setStudents((prev) => prev.map((s, i) => (i === index ? updated : s)));
@@ -45,6 +68,8 @@ export function OrderForm({
 
   function removeStudent(index: number) {
     setStudents((prev) => prev.filter((_, i) => i !== index));
+    setCustomCheese(null);
+    setCustomPepperoni(null);
   }
 
   function addStudent() {
@@ -79,6 +104,12 @@ export function OrderForm({
       return;
     }
 
+    const splitError = validateWholeAllocation(withSlices);
+    if (splitError) {
+      setError(splitError);
+      return;
+    }
+
     setSubmitting(true);
 
     let sourceId: string | undefined;
@@ -105,6 +136,8 @@ export function OrderForm({
             firstName: s.firstName,
             lastName: s.lastName,
             grade: s.grade,
+            cheeseSlicesFromWhole: cheeseSlices[s.key],
+            pepperoniSlicesFromWhole: pepperoniSlices[s.key],
             cheeseSlices: s.cheeseSlices,
             pepperoniSlices: s.pepperoniSlices,
             wholeCheese: s.wholeCheese,
@@ -160,7 +193,30 @@ export function OrderForm({
         </div>
       </div>
 
-      <OrderSummary students={students} prices={prices} labels={labels} />
+      {students.length >= 2 && cheeseWhole > 0 && (
+        <WholePizzaSplit
+          pizzaLabel={labels.wholeCheese}
+          pizzaCount={cheeseWhole}
+          people={namedPeople}
+          slices={cheeseSlices}
+          isCustom={customCheese !== null && customCheese.forTotal === cheeseWhole}
+          onChange={(slices) => setCustomCheese({ forTotal: cheeseWhole, slices })}
+          onReset={() => setCustomCheese(null)}
+        />
+      )}
+      {students.length >= 2 && pepperoniWhole > 0 && (
+        <WholePizzaSplit
+          pizzaLabel={labels.wholePepperoni}
+          pizzaCount={pepperoniWhole}
+          people={namedPeople}
+          slices={pepperoniSlices}
+          isCustom={customPepperoni !== null && customPepperoni.forTotal === pepperoniWhole}
+          onChange={(slices) => setCustomPepperoni({ forTotal: pepperoniWhole, slices })}
+          onReset={() => setCustomPepperoni(null)}
+        />
+      )}
+
+      <OrderSummary students={students} prices={prices} labels={labels} splitNotes={splitNotes} />
 
       <Card className="p-4 sm:p-5">
         <h2 className="mb-3 text-base font-semibold text-stone-800">Your info</h2>

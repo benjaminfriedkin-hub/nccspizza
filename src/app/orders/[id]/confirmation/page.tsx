@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { gradeLabel } from "@/lib/constants";
 import { getCurrentPriceSettings } from "@/lib/pricing";
+import { sharedSliceLines } from "@/lib/wholePizza";
 import { Card } from "@/components/ui/Card";
 
 function formatCents(cents: number): string {
@@ -71,6 +72,9 @@ export default async function ConfirmationPage({
                       </li>
                     );
                   })}
+                  {sharedSliceLines(s, { cheese: labels.wholeCheese, pepperoni: labels.wholePepperoni }).map((line) => (
+                    <li key={line}>🍕 {line}</li>
+                  ))}
                 </ul>
               </div>
             ))}
