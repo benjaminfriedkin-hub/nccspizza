@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { buildOrdersCsv, selectAndSortForGroup, EXPORT_GROUPS, type ExportGroupKey } from "@/lib/csv";
+import { buildOrdersWorkbook, selectAndSortForGroup, EXPORT_GROUPS, type ExportGroupKey } from "@/lib/orderExport";
 import { getCurrentPriceSettings } from "@/lib/pricing";
 import { shareNotes } from "@/lib/wholePizza";
 
@@ -59,14 +59,15 @@ export async function GET(request: NextRequest) {
 
   const { label: labels } = await getCurrentPriceSettings();
   const grouped = selectAndSortForGroup(rows, groupParam);
-  const csv = buildOrdersCsv(grouped, labels);
+  const groupLabel = EXPORT_GROUPS.find((g) => g.key === groupParam)!.label;
+  const workbook = await buildOrdersWorkbook(grouped, labels, groupLabel);
   const dateLabel = fridayDate.toISOString().slice(0, 10);
 
-  return new NextResponse(csv, {
+  return new NextResponse(new Uint8Array(workbook), {
     status: 200,
     headers: {
-      "Content-Type": "text/csv",
-      "Content-Disposition": `attachment; filename="pizza-orders-${dateLabel}-${groupParam}.csv"`,
+      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition": `attachment; filename="pizza-orders-${dateLabel}-${groupParam}.xlsx"`,
     },
   });
 }

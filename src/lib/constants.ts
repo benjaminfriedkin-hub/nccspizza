@@ -63,11 +63,20 @@ export const GRADE_OPTIONS: { value: string; label: string }[] = [
 
 export const GRADE_VALUES = GRADE_OPTIONS.map((g) => g.value);
 
-// Grade bands used to split the admin CSV export into four files.
+// Grade bands used to split the admin Excel export into four files.
 export const GRADE_BAND_K_TO_2 = ["K", "1", "2"];
 export const GRADE_BAND_3_TO_5 = ["3", "4", "5"];
 export const GRADE_BAND_6_TO_12 = ["6", "7", "8", "9", "10", "11", "12"];
 export const GRADE_BAND_TEACHERS_PARENTS = ["Teacher", "Parent"];
+
+export const EXPORT_GROUPS = [
+  { key: "k2", label: "K–2" },
+  { key: "3to5", label: "3–5" },
+  { key: "6to12", label: "6–12" },
+  { key: "teachersParents", label: "Teachers + Parents" },
+] as const;
+
+export type ExportGroupKey = (typeof EXPORT_GROUPS)[number]["key"];
 
 // Secondary = grades 6-12, plus teachers/parents ordering for themselves.
 // Drives which students the drink option is offered to.

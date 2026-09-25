@@ -3,8 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { listFridaysAround } from "@/lib/friday";
 import { computePizzaNeeds } from "@/lib/pizzaMath";
-import { gradeLabel, WEEKLY_BUFFER } from "@/lib/constants";
-import { EXPORT_GROUPS } from "@/lib/csv";
+import { gradeLabel, WEEKLY_BUFFER, EXPORT_GROUPS } from "@/lib/constants";
 import { sharedSliceLines } from "@/lib/wholePizza";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -88,7 +87,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs font-medium text-stone-500">Export CSV:</span>
+        <span className="text-xs font-medium text-stone-500">Export Excel:</span>
         {EXPORT_GROUPS.map((group) => (
           <a
             key={group.key}

@@ -172,7 +172,7 @@ src/
   app/             Pages (parent order form, confirmation, /admin/*) and API routes
   components/      UI components (order form, admin dashboard widgets)
   lib/             Core logic: friday.ts (date math), pizzaMath.ts, pricing.ts,
-                   square.ts, email.ts, auth.ts, csv.ts
+                   square.ts, email.ts, auth.ts, orderExport.ts
 ```
 
 See [`src/lib/friday.ts`](src/lib/friday.ts) for the ordering-window date math and
