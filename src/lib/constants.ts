@@ -34,9 +34,9 @@ export const DEFAULT_PRICE_CENTS: Record<ItemKey, number> = {
 
 export const SLICES_PER_PIZZA = 8;
 
-// A parent-facing "Garlic cheese breadsticks" order is 3 pieces; Pizza Hut
-// sells breadsticks in orders of 10 pieces. Purchase orders = ceil(pieces / 10).
-export const BREADSTICK_PIECES_PER_PARENT_ORDER = 3;
+// Each parent-facing breadstick ($1) is one piece; Pizza Hut sells breadsticks
+// in orders of 10 pieces. Purchase orders = ceil(pieces / 10).
+export const BREADSTICK_PIECES_PER_PARENT_ORDER = 1;
 export const BREADSTICK_PIECES_PER_PURCHASE_ORDER = 10;
 
 export const SCHOOL_TIMEZONE = process.env.SCHOOL_TIMEZONE || "America/New_York";

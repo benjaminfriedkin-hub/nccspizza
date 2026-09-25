@@ -132,10 +132,9 @@ export default function DashboardPage() {
                 {needs.breadsticks.totalPurchaseOrdersNeeded}
               </p>
               <p className="mt-1 text-xs text-stone-500">
-                {needs.breadsticks.totalStudentOrders} parent order
-                {needs.breadsticks.totalStudentOrders === 1 ? "" : "s"} × 3 = {needs.breadsticks.totalPieces} pieces
-                → ⌈{needs.breadsticks.totalPieces}/10⌉ = {needs.breadsticks.purchaseOrdersFromStudentOrders} Pizza
-                Hut order{needs.breadsticks.purchaseOrdersFromStudentOrders === 1 ? "" : "s"} (10 pieces each)
+                {needs.breadsticks.totalPieces} breadstick piece{needs.breadsticks.totalPieces === 1 ? "" : "s"} ordered
+                → ⌈{needs.breadsticks.totalPieces}/10⌉ = {needs.breadsticks.purchaseOrdersFromStudentOrders} Pizza Hut
+                order{needs.breadsticks.purchaseOrdersFromStudentOrders === 1 ? "" : "s"} (10 pieces each)
                 {needs.breadsticks.buffer > 0 && <> + {needs.breadsticks.buffer} standing buffer</>}
               </p>
               <p className="mt-1 text-xs text-stone-500">

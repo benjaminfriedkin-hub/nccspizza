@@ -36,10 +36,11 @@ describe("computePizzaNeeds", () => {
     expect(needs.breadsticks.totalStudentOrders).toBe(3);
   });
 
-  it("converts 3-piece parent breadstick orders to 10-piece Pizza Hut orders, rounding up", () => {
-    const cases: [number, number][] = [[1, 1], [3, 1], [4, 2], [7, 3], [10, 3]];
-    for (const [parentOrders, expected] of cases) {
-      const needs = computePizzaNeeds([student({ breadsticks: parentOrders })]);
+  it("converts 1-piece parent breadsticks to 10-piece Pizza Hut orders, rounding up", () => {
+    const cases: [number, number, number][] = [[1, 1, 1], [10, 10, 1], [11, 11, 2], [20, 20, 2], [21, 21, 3]];
+    for (const [breadsticks, pieces, expected] of cases) {
+      const needs = computePizzaNeeds([student({ breadsticks })]);
+      expect(needs.breadsticks.totalPieces).toBe(pieces);
       expect(needs.breadsticks.purchaseOrdersFromStudentOrders).toBe(expected);
     }
   });
