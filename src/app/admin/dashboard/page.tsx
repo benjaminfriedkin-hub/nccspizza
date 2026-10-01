@@ -105,6 +105,13 @@ export default function DashboardPage() {
         <p className="text-sm text-stone-500">Loading…</p>
       ) : (
         <>
+          <Card className="p-4">
+            <h2 className="text-sm font-semibold text-stone-700">📋 Friday summary</h2>
+            <p className="mt-1 text-xs text-stone-500">
+              {orders.length} order{orders.length === 1 ? "" : "s"} · {formatCents(totalRevenueCents)} collected
+            </p>
+          </Card>
+
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Card className="p-4">
               <h2 className="text-sm font-semibold text-stone-700">🧀 Cheese pizzas needed</h2>
@@ -136,10 +143,6 @@ export default function DashboardPage() {
                 → ⌈{needs.breadsticks.totalPieces}/10⌉ = {needs.breadsticks.purchaseOrdersFromStudentOrders} Pizza Hut
                 order{needs.breadsticks.purchaseOrdersFromStudentOrders === 1 ? "" : "s"} (10 pieces each)
                 {needs.breadsticks.buffer > 0 && <> + {needs.breadsticks.buffer} standing buffer</>}
-              </p>
-              <p className="mt-1 text-xs text-stone-500">
-                {orders.length} order{orders.length === 1 ? "" : "s"} · {formatCents(totalRevenueCents)}{" "}
-                collected
               </p>
             </Card>
             <Card className="p-4">
