@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getUpcomingFriday, getNextOrderableFriday, getReopensAt } from "@/lib/friday";
 import { getCurrentPriceSettings } from "@/lib/pricing";
+import { getPrepayFridays } from "@/lib/prepay";
 import { SCHOOL_TIMEZONE } from "@/lib/constants";
 import { OrderForm } from "@/components/order/OrderForm";
 import { Card } from "@/components/ui/Card";
@@ -30,6 +31,7 @@ export default async function Home() {
   const skippedDates = skippedRows.map((r) => r.date);
   const window = getUpcomingFriday(new Date(), skippedDates);
   const priceSettings = await getCurrentPriceSettings();
+  const prepayFridays = window.orderingOpen ? getPrepayFridays(window.friday, skippedDates) : null;
 
   return (
     <div className="flex flex-1 justify-center px-4 py-8 sm:py-12">
@@ -53,6 +55,11 @@ export default async function Home() {
               prices={priceSettings.price}
               labels={priceSettings.label}
               fridayLabel={formatFriday(window.friday)}
+              prepay={
+                prepayFridays
+                  ? { weeks: prepayFridays.length, lastFridayLabel: formatFriday(prepayFridays[prepayFridays.length - 1]) }
+                  : undefined
+              }
             />
           </>
         ) : (

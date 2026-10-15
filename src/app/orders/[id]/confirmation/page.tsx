@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { gradeLabel } from "@/lib/constants";
+import { gradeLabel, SCHOOL_TIMEZONE } from "@/lib/constants";
 import { getCurrentPriceSettings } from "@/lib/pricing";
 import { sharedSliceLines } from "@/lib/wholePizza";
 import { Card } from "@/components/ui/Card";
@@ -35,6 +35,15 @@ export default async function ConfirmationPage({
 
   const { label: labels } = await getCurrentPriceSettings();
 
+  const prepaidFridays = order.prepaidGroupId
+    ? await prisma.order.findMany({
+        where: { prepaidGroupId: order.prepaidGroupId },
+        orderBy: { prepaidWeek: "asc" },
+        select: { fridayDate: true },
+      })
+    : null;
+  const totalCharged = order.totalAmountCents * (prepaidFridays?.length ?? 1);
+
   const fridayLabel = order.fridayDate.toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
@@ -53,7 +62,27 @@ export default async function ConfirmationPage({
         </div>
 
         <Card className="p-5">
-          <p className="text-sm text-stone-600">Pizza for {fridayLabel}</p>
+          {prepaidFridays ? (
+            <div className="text-sm text-stone-600">
+              <p className="font-medium text-stone-800">
+                Prepaid for {prepaidFridays.length} pizza Fridays — this order repeats every week
+              </p>
+              <ul className="mt-1 columns-2 text-xs text-stone-500">
+                {prepaidFridays.map((o) => (
+                  <li key={o.fridayDate.toISOString()}>
+                    {o.fridayDate.toLocaleDateString("en-US", {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                      timeZone: SCHOOL_TIMEZONE,
+                    })}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="text-sm text-stone-600">Pizza for {fridayLabel}</p>
+          )}
           <p className="mt-1 text-xs text-stone-400">Order #{order.id}</p>
 
           <div className="mt-4 space-y-4 border-t border-stone-100 pt-4">
@@ -82,7 +111,7 @@ export default async function ConfirmationPage({
 
           <div className="mt-4 flex items-center justify-between border-t border-stone-200 pt-3">
             <span className="text-sm font-semibold text-stone-800">Total charged</span>
-            <span className="text-lg font-bold text-amber-700">{formatCents(order.totalAmountCents)}</span>
+            <span className="text-lg font-bold text-amber-700">{formatCents(totalCharged)}</span>
           </div>
         </Card>
 

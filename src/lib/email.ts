@@ -34,6 +34,8 @@ interface OrderConfirmationEmailInput {
   parentEmail: string;
   fridayDateLabel: string;
   totalAmountCents: number;
+  // Set for a "pay for the rest of the year" purchase: the order below repeats every listed Friday.
+  prepaid?: { weeklyTotalCents: number; fridayLabels: string[] };
   labels: LabelMap;
   students: {
     firstName: string;
@@ -51,7 +53,12 @@ function formatCents(cents: number): string {
 function buildEmailBody(input: OrderConfirmationEmailInput): { subject: string; text: string } {
   const lines: string[] = [];
   lines.push(`Thanks for your order, ${input.parentName}!`);
-  lines.push(`Pizza Friday: ${input.fridayDateLabel}`);
+  if (input.prepaid) {
+    lines.push(`You prepaid for the rest of the school year: ${input.prepaid.fridayLabels.length} pizza Fridays.`);
+    lines.push(`The order below is repeated every week (${formatCents(input.prepaid.weeklyTotalCents)} per week):`);
+  } else {
+    lines.push(`Pizza Friday: ${input.fridayDateLabel}`);
+  }
   lines.push("");
   for (const student of input.students) {
     lines.push(`${student.firstName} ${student.lastName} (${gradeLabel(student.grade)}):`);
@@ -62,13 +69,22 @@ function buildEmailBody(input: OrderConfirmationEmailInput): { subject: string; 
     }
     for (const line of student.sharedLines ?? []) lines.push(`  - ${line}`);
   }
+  if (input.prepaid) {
+    lines.push("");
+    lines.push("Pizza Fridays covered:");
+    for (const label of input.prepaid.fridayLabels) lines.push(`  - ${label}`);
+    lines.push("");
+    lines.push("Prepaid orders are final and are not refunded or credited if a Friday is canceled.");
+  }
   lines.push("");
   lines.push(`Total charged: ${formatCents(input.totalAmountCents)}`);
   lines.push("");
   lines.push(`Order confirmation #${input.orderId}`);
 
   return {
-    subject: `Pizza Friday order confirmed — ${input.fridayDateLabel}`,
+    subject: input.prepaid
+      ? `Pizza Fridays prepaid for the rest of the year — ${input.prepaid.fridayLabels.length} weeks`
+      : `Pizza Friday order confirmed — ${input.fridayDateLabel}`,
     text: lines.join("\n"),
   };
 }

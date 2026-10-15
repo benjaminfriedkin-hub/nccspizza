@@ -6,8 +6,9 @@ import { getUpcomingFriday } from "@/lib/friday";
 import { getCurrentPriceSettings, computeOrderTotalCents, type StudentQuantities } from "@/lib/pricing";
 import { chargeOrder } from "@/lib/square";
 import { sendOrderConfirmationEmail } from "@/lib/email";
-import { ITEM_KEYS, GRADE_VALUES, isSecondaryGrade, SLICES_PER_PIZZA } from "@/lib/constants";
+import { ITEM_KEYS, GRADE_VALUES, isSecondaryGrade, SLICES_PER_PIZZA, SCHOOL_TIMEZONE } from "@/lib/constants";
 import { validateWholeAllocation, sharedSliceLines } from "@/lib/wholePizza";
+import { getPrepayFridays } from "@/lib/prepay";
 
 interface StudentInput extends StudentQuantities {
   firstName: string;
@@ -25,6 +26,9 @@ interface OrderRequestBody {
   parentPhone?: string;
   students?: StudentInput[];
   sourceId?: string;
+  // Prepay: repeat this exact order every remaining pizza Friday, paid once.
+  repeatThroughYear?: boolean;
+  expectedWeeks?: number;
 }
 
 function badRequest(message: string) {
@@ -110,12 +114,26 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  let fridays = [window.friday];
+  if (body.repeatThroughYear === true) {
+    const prepayFridays = getPrepayFridays(window.friday, skippedDates);
+    if (!prepayFridays) return badRequest("Paying for the rest of the year isn't available right now.");
+    if (body.expectedWeeks !== prepayFridays.length) {
+      return badRequest(
+        "The number of remaining pizza Fridays changed while you were ordering. Please refresh the page and check your total before paying."
+      );
+    }
+    fridays = prepayFridays;
+  }
+  const isPrepaid = body.repeatThroughYear === true;
+
   const { price: prices, label: labels } = await getCurrentPriceSettings();
-  const totalAmountCents = computeOrderTotalCents(body.students, prices);
-  const orderId = randomUUID();
+  const weeklyTotalCents = computeOrderTotalCents(body.students, prices);
+  const totalAmountCents = weeklyTotalCents * fridays.length;
+  const groupId = randomUUID();
 
   const chargeResult = await chargeOrder({
-    idempotencyKey: orderId,
+    idempotencyKey: groupId,
     amountCents: totalAmountCents,
     sourceId: body.sourceId,
   });
@@ -127,45 +145,53 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const order = await prisma.$transaction(async (tx) => {
-    return tx.order.create({
-      data: {
-        id: orderId,
-        fridayDate: window.friday,
-        parentName: body.parentName!.trim(),
-        parentEmail: body.parentEmail!.trim(),
-        parentPhone: body.parentPhone?.trim() || null,
-        totalAmountCents,
-        paymentStatus: chargeResult.paymentStatus,
-        paymentMode: chargeResult.paymentMode,
-        squarePaymentId: chargeResult.squarePaymentId,
-        cheeseSlicePriceCents: prices.cheeseSlice,
-        pepperoniSlicePriceCents: prices.pepperoniSlice,
-        wholeCheesePriceCents: prices.wholeCheese,
-        wholePepperoniPriceCents: prices.wholePepperoni,
-        breadstickPriceCents: prices.breadsticks,
-        snackPriceCents: prices.snack,
-        drinkPriceCents: prices.drink,
-        students: {
-          create: body.students!.map((s, i) => ({
-            cheeseSlicesFromWhole: people[i].cheeseSlicesFromWhole,
-            pepperoniSlicesFromWhole: people[i].pepperoniSlicesFromWhole,
-            firstName: s.firstName.trim(),
-            lastName: s.lastName.trim(),
-            grade: s.grade,
-            cheeseSlices: s.cheeseSlices,
-            pepperoniSlices: s.pepperoniSlices,
-            wholeCheese: s.wholeCheese,
-            wholePepperoni: s.wholePepperoni,
-            breadsticks: s.breadsticks,
-            snacks: s.snacks,
-            drinks: s.drinks,
-          })),
+  // One order per covered Friday (a single one for a normal order), written in
+  // one transaction so a prepay is never half-recorded after the card is charged.
+  const created = await prisma.$transaction(
+    fridays.map((friday, i) =>
+      prisma.order.create({
+        data: {
+          id: i === 0 && !isPrepaid ? groupId : randomUUID(),
+          fridayDate: friday,
+          parentName: body.parentName!.trim(),
+          parentEmail: body.parentEmail!.trim(),
+          parentPhone: body.parentPhone?.trim() || null,
+          totalAmountCents: weeklyTotalCents,
+          paymentStatus: chargeResult.paymentStatus,
+          paymentMode: chargeResult.paymentMode,
+          squarePaymentId: chargeResult.squarePaymentId,
+          prepaidGroupId: isPrepaid ? groupId : null,
+          prepaidWeek: isPrepaid ? i + 1 : null,
+          prepaidWeeks: isPrepaid ? fridays.length : null,
+          cheeseSlicePriceCents: prices.cheeseSlice,
+          pepperoniSlicePriceCents: prices.pepperoniSlice,
+          wholeCheesePriceCents: prices.wholeCheese,
+          wholePepperoniPriceCents: prices.wholePepperoni,
+          breadstickPriceCents: prices.breadsticks,
+          snackPriceCents: prices.snack,
+          drinkPriceCents: prices.drink,
+          students: {
+            create: body.students!.map((s, j) => ({
+              cheeseSlicesFromWhole: people[j].cheeseSlicesFromWhole,
+              pepperoniSlicesFromWhole: people[j].pepperoniSlicesFromWhole,
+              firstName: s.firstName.trim(),
+              lastName: s.lastName.trim(),
+              grade: s.grade,
+              cheeseSlices: s.cheeseSlices,
+              pepperoniSlices: s.pepperoniSlices,
+              wholeCheese: s.wholeCheese,
+              wholePepperoni: s.wholePepperoni,
+              breadsticks: s.breadsticks,
+              snacks: s.snacks,
+              drinks: s.drinks,
+            })),
+          },
         },
-      },
-      include: { students: true },
-    });
-  });
+        include: { students: true },
+      })
+    )
+  );
+  const order = created[0];
 
   await sendOrderConfirmationEmail({
     orderId: order.id,
@@ -176,7 +202,15 @@ export async function POST(request: NextRequest) {
       month: "long",
       day: "numeric",
     }),
-    totalAmountCents: order.totalAmountCents,
+    totalAmountCents,
+    prepaid: isPrepaid
+      ? {
+          weeklyTotalCents,
+          fridayLabels: fridays.map((f) =>
+            f.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: SCHOOL_TIMEZONE })
+          ),
+        }
+      : undefined,
     labels,
     students: order.students.map((s) => ({
       firstName: s.firstName,

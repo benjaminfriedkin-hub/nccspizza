@@ -39,6 +39,7 @@ export async function GET(request: NextRequest) {
     const notes = shareNotes(order.students.map((s) => ({ ...s, name: `${s.firstName} ${s.lastName}` })));
     return order.students.map((s, i) => ({
       shareNote: notes[i],
+      prepaidNote: order.prepaidWeek ? `Week ${order.prepaidWeek} of ${order.prepaidWeeks}` : "",
       cheeseSlicesFromWhole: s.cheeseSlicesFromWhole,
       pepperoniSlicesFromWhole: s.pepperoniSlicesFromWhole,
       firstName: s.firstName,

@@ -50,11 +50,18 @@ model Order {
   snackPriceCents          Int @default(75)
   drinkPriceCents          Int @default(100)
 
+  // Set when this order is one week of a "prepay the rest of the year" purchase.
+  // Every week from that purchase shares prepaidGroupId and the one Square payment.
+  prepaidGroupId String?
+  prepaidWeek    Int? // 1-based position within the group
+  prepaidWeeks   Int? // total weeks in the group
+
   createdAt DateTime @default(now())
 
   students OrderStudent[]
 
   @@index([fridayDate])
+  @@index([prepaidGroupId])
 }
 
 model OrderStudent {

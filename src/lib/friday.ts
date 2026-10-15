@@ -153,3 +153,34 @@ export function listFridaysAround(
   }
   return list;
 }
+
+/**
+ * Every pizza Friday from `startFriday` through `lastDay` (inclusive), skipping
+ * admin-skipped dates. Used to work out how many weeks a prepay covers.
+ */
+export function listPizzaFridaysThrough(
+  startFriday: Date,
+  lastDay: Date,
+  skippedFridayDates: Date[] = [],
+  timeZone: string = SCHOOL_TIMEZONE
+): Date[] {
+  const list: Date[] = [];
+  let candidate = startFriday;
+  // A school year is < 60 Fridays; the cap only guards against a bad lastDay.
+  for (let i = 0; i < 60 && candidate.getTime() <= lastDay.getTime(); i++) {
+    if (!skippedFridayDates.some((d) => isSameLocalDay(d, candidate, timeZone))) list.push(candidate);
+    candidate = addLocalDays(candidate, 7, timeZone);
+  }
+  return list;
+}
+
+/** The calendar date ("YYYY-MM-DD") that `date` falls on in the school's timezone. */
+export function localYmd(date: Date, timeZone: string = SCHOOL_TIMEZONE): string {
+  return date.toLocaleDateString("en-CA", { timeZone });
+}
+
+/** 11:59:59.999 PM on the given "YYYY-MM-DD" in the school's timezone. */
+export function endOfLocalDay(ymd: string, timeZone: string = SCHOOL_TIMEZONE): Date {
+  const [y, m, d] = ymd.split("-").map(Number);
+  return zonedInstant(timeZone, y, m - 1, d, 23, 59, 59, 999);
+}

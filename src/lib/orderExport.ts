@@ -24,6 +24,7 @@ export interface ExportOrderRow {
   cheeseSlicesFromWhole: number;
   pepperoniSlicesFromWhole: number;
   shareNote: string;
+  prepaidNote: string; // e.g. "Week 3 of 23", or "" for a normal order
   breadsticks: number;
   snacks: number;
   drinks: number;
@@ -77,6 +78,7 @@ export function buildOrdersTable(rows: ExportOrderRow[], labels: LabelMap): { he
     labels.drink,
     "Whole cheese pizza slices for this person",
     "Whole pepperoni pizza slices for this person",
+    "Prepaid",
     "Shared whole pizza split",
   ];
 
@@ -96,6 +98,7 @@ export function buildOrdersTable(rows: ExportOrderRow[], labels: LabelMap): { he
     row.drinks,
     row.cheeseSlicesFromWhole,
     row.pepperoniSlicesFromWhole,
+    row.prepaidNote,
     row.shareNote,
   ]);
 

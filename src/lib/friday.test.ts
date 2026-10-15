@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getFridayOfWeek, getCutoffFor, getUpcomingFriday, getNextOrderableFriday, listFridaysAround } from "./friday";
+import { getFridayOfWeek, getCutoffFor, getUpcomingFriday, getNextOrderableFriday, listFridaysAround, listPizzaFridaysThrough } from "./friday";
 
 const TZ = "America/New_York";
 
@@ -122,5 +122,30 @@ describe("listFridaysAround", () => {
       expect(diffDays).toBe(7);
     }
     expect(list[2].getTime()).toBe(FRIDAY.getTime());
+  });
+});
+
+describe("listPizzaFridaysThrough", () => {
+  // 2026-11-06 is a Friday; EST starts Nov 1, so local midnight = 05:00Z.
+  const nov6 = new Date("2026-11-06T05:00:00.000Z");
+  const lastDay = new Date("2026-12-04T12:00:00.000Z");
+  it("lists each Friday up to and including the last day", () => {
+    const list = listPizzaFridaysThrough(nov6, lastDay, [], TZ);
+    expect(list.map((d) => d.toISOString().slice(0, 10))).toEqual(["2026-11-06", "2026-11-13", "2026-11-20", "2026-11-27", "2026-12-04"]);
+  });
+  it("leaves out skipped Fridays", () => {
+    const list = listPizzaFridaysThrough(nov6, lastDay, [new Date("2026-11-27T05:00:00.000Z")], TZ);
+    expect(list).toHaveLength(4);
+    expect(list.map((d) => d.toISOString().slice(0, 10))).not.toContain("2026-11-27");
+  });
+  it("stops at the last day even when that day isn't a Friday", () => {
+    const thursday = new Date("2026-12-03T12:00:00.000Z");
+    expect(listPizzaFridaysThrough(nov6, thursday, [], TZ)).toHaveLength(4);
+  });
+  it("crosses the daylight-saving change without drifting off midnight", () => {
+    const list = listPizzaFridaysThrough(new Date("2027-03-05T05:00:00.000Z"), new Date("2027-03-26T12:00:00.000Z"), [], TZ);
+    expect(list.map((d) => d.toISOString())).toEqual([
+      "2027-03-05T05:00:00.000Z", "2027-03-12T05:00:00.000Z", "2027-03-19T04:00:00.000Z", "2027-03-26T04:00:00.000Z",
+    ]);
   });
 });

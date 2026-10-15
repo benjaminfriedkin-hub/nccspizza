@@ -22,10 +22,12 @@ export function OrderForm({
   prices,
   labels,
   fridayLabel,
+  prepay,
 }: {
   prices: PriceMap;
   labels: LabelMap;
   fridayLabel: string;
+  prepay?: { weeks: number; lastFridayLabel: string };
 }) {
   const router = useRouter();
   const [students, setStudents] = useState<StudentForm[]>([emptyStudent(newKey())]);
@@ -35,6 +37,7 @@ export function OrderForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cardReady, setCardReady] = useState(false);
+  const [repeatThroughYear, setRepeatThroughYear] = useState(false);
   const cardFieldRef = useRef<SquareCardFieldHandle>(null);
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const scrollToKeyRef = useRef<string | null>(null);
@@ -43,6 +46,8 @@ export function OrderForm({
   const [customPepperoni, setCustomPepperoni] = useState<CustomAllocation | null>(null);
 
   const total = students.reduce((t, s) => t + studentTotalCents(s, prices), 0);
+  const prepayActive = repeatThroughYear && prepay !== undefined;
+  const chargeTotal = prepayActive ? total * prepay.weeks : total;
 
   const cheeseWhole = students.reduce((t, s) => t + s.wholeCheese, 0);
   const pepperoniWhole = students.reduce((t, s) => t + s.wholePepperoni, 0);
@@ -132,6 +137,8 @@ export function OrderForm({
           parentEmail,
           parentPhone: parentPhone || undefined,
           sourceId,
+          repeatThroughYear: prepayActive,
+          expectedWeeks: prepayActive ? prepay.weeks : undefined,
           students: students.map((s) => ({
             firstName: s.firstName,
             lastName: s.lastName,
@@ -192,6 +199,37 @@ export function OrderForm({
           ))}
         </div>
       </div>
+
+      {prepay && (
+        <Card className="p-4 sm:p-5">
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              checked={repeatThroughYear}
+              onChange={(e) => setRepeatThroughYear(e.target.checked)}
+              className="mt-1 h-4 w-4 accent-amber-600"
+            />
+            <span>
+              <span className="block text-sm font-semibold text-stone-800">
+                Pay for the rest of the school year
+              </span>
+              <span className="mt-0.5 block text-xs text-stone-500">
+                Repeat this exact order every pizza Friday through {prepay.lastFridayLabel} —{" "}
+                {prepay.weeks} Fridays, paid once.
+                {total > 0 && (
+                  <>
+                    {" "}
+                    ${(total / 100).toFixed(2)} × {prepay.weeks} = <strong>${((total * prepay.weeks) / 100).toFixed(2)}</strong>
+                  </>
+                )}
+              </span>
+              <span className="mt-1 block text-xs text-stone-400">
+                Prepaid orders are final: no refunds, and no credit if a Friday is canceled.
+              </span>
+            </span>
+          </label>
+        </Card>
+      )}
 
       {students.length >= 2 && cheeseWhole > 0 && (
         <WholePizzaSplit
@@ -276,10 +314,12 @@ export function OrderForm({
         {submitting
           ? "Placing order…"
           : SQUARE_CONFIGURED
-            ? `Pay $${(total / 100).toFixed(2)} & place order`
-            : `Place order (test mode) — $${(total / 100).toFixed(2)}`}
+            ? `Pay $${(chargeTotal / 100).toFixed(2)} & place order`
+            : `Place order (test mode) — $${(chargeTotal / 100).toFixed(2)}`}
       </Button>
-      <p className="text-center text-xs text-stone-500">Pizza for {fridayLabel}</p>
+      <p className="text-center text-xs text-stone-500">
+        {prepayActive ? `Starting with the pizza on ${fridayLabel}` : `Pizza for ${fridayLabel}`}
+      </p>
     </form>
   );
 }

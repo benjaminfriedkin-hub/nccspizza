@@ -32,6 +32,8 @@ interface AdminOrder {
   totalAmountCents: number;
   paymentMode: string;
   paymentStatus: string;
+  prepaidWeek: number | null;
+  prepaidWeeks: number | null;
   students: OrderStudent[];
 }
 
@@ -208,6 +210,7 @@ export default function DashboardPage() {
                             <br />
                             <span className="text-xs text-stone-400">
                               {order.paymentMode === "mock" ? "test payment" : "Square"}
+                              {order.prepaidWeek ? ` · prepaid wk ${order.prepaidWeek}/${order.prepaidWeeks}` : ""}
                             </span>
                           </td>
                         )}

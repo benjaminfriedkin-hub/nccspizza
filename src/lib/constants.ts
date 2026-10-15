@@ -39,6 +39,12 @@ export const SLICES_PER_PIZZA = 8;
 export const BREADSTICK_PIECES_PER_PARENT_ORDER = 1;
 export const BREADSTICK_PIECES_PER_PURCHASE_ORDER = 10;
 
+// "Prepay the rest of the year" is offered once ordering opens for this Friday
+// (Saturday, Oct 31, 2026) and covers every pizza Friday through the last day
+// of school (Thursday, June 3, 2027 — secondary's last day).
+export const PREPAY_FIRST_FRIDAY = "2026-11-06";
+export const LAST_DAY_OF_SCHOOL = "2027-06-03";
+
 export const SCHOOL_TIMEZONE = process.env.SCHOOL_TIMEZONE || "America/New_York";
 
 // Grade K-12 plus non-student roles, in order. Value is what's stored on the
